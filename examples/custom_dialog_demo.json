@@ -1,0 +1,92 @@
+{
+  "version": "2.2.0",
+  "x": 5,
+  "y": 3,
+  "w": 70,
+  "h": 18,
+  "title": "Custom Dialog Demo",
+  "menu_count": 8,
+  "menu_items": [
+    {"caption": "Dialogs", "name_id": "mnuDialogs", "parent": 0, "has_submenu": true},
+    {"caption": "Input Dialog", "name_id": "mnuInput", "parent": 1, "has_submenu": false},
+    {"caption": "Confirm Dialog", "name_id": "mnuConfirm", "parent": 1, "has_submenu": false},
+    {"caption": "List Dialog", "name_id": "mnuList", "parent": 1, "has_submenu": false},
+    {"caption": "Progress Dialog", "name_id": "mnuProgress", "parent": 1, "has_submenu": false},
+    {"caption": "Custom Form", "name_id": "mnuCustom", "parent": 1, "has_submenu": false},
+    {"caption": "Settings", "name_id": "mnuSettings", "parent": 0, "has_submenu": true},
+    {"caption": "Show Settings", "name_id": "mnuShowSettings", "parent": 7, "has_submenu": false}
+  ],
+  "controls": [
+    {
+      "x": 2,
+      "y": 2,
+      "w": 66,
+      "h": 10,
+      "tool_type": 14,
+      "name_id": "txtLog",
+      "caption": "Dialog results will appear here...",
+      "code": "def on_change_txtLog():\\n    pass\\n"
+    },
+    {
+      "x": 2,
+      "y": 13,
+      "w": 20,
+      "h": 1,
+      "tool_type": 3,
+      "name_id": "btnInput",
+      "caption": "Input Dialog",
+      "code": "def on_click_btnInput():\\n    show_input_dialog()\\n"
+    },
+    {
+      "x": 24,
+      "y": 13,
+      "w": 20,
+      "h": 1,
+      "tool_type": 3,
+      "name_id": "btnConfirm",
+      "caption": "Confirm Dialog",
+      "code": "def on_click_btnConfirm():\\n    show_confirm_dialog()\\n"
+    },
+    {
+      "x": 46,
+      "y": 13,
+      "w": 20,
+      "h": 1,
+      "tool_type": 3,
+      "name_id": "btnList",
+      "caption": "List Dialog",
+      "code": "def on_click_btnList():\\n    show_list_dialog()\\n"
+    },
+    {
+      "x": 2,
+      "y": 15,
+      "w": 20,
+      "h": 1,
+      "tool_type": 3,
+      "name_id": "btnProgress",
+      "caption": "Progress Dialog",
+      "code": "def on_click_btnProgress():\\n    show_progress_dialog()\\n"
+    },
+    {
+      "x": 24,
+      "y": 15,
+      "w": 20,
+      "h": 1,
+      "tool_type": 3,
+      "name_id": "btnCustom",
+      "caption": "Custom Dialog",
+      "code": "def on_click_btnCustom():\\n    show_custom_dialog()\\n"
+    },
+    {
+      "x": 46,
+      "y": 15,
+      "w": 20,
+      "h": 1,
+      "tool_type": 3,
+      "name_id": "btnClear",
+      "caption": "Clear Log",
+      "code": "def on_click_btnClear():\\n    txtLog.caption = 'Log cleared.'\\n"
+    }
+  ],
+  "code": "def on_load_frmMain():\\n    txtLog.caption = 'Custom Dialog Demo\\\\n\\\\nClick buttons to open different dialog types.'\\n\\ndef log(message):\\n    txtLog.caption = txtLog.caption + '\\\\n' + message\\n\\ndef show_input_dialog():\\n    dialog = create_input_dialog('Enter Name', 'Please enter your name:', 'John Doe')\\n    result = dialog.show_dialog(modal=True, parent_x=frmMain.x, parent_y=frmMain.y, parent_width=frmMain.w, parent_height=frmMain.h)\\n    \\n    if result == DialogResult.OK:\\n        name = dialog.get_value('input')\\n        log(f'Input Dialog: OK, Name={name}')\\n    else:\\n        log('Input Dialog: Cancelled')\\n\\ndef show_confirm_dialog():\\n    dialog = create_confirm_dialog('Confirm Action', 'Are you sure you want to proceed?', yes_no=True)\\n    result = dialog.show_dialog(modal=True, parent_x=frmMain.x, parent_y=frmMain.y, parent_width=frmMain.w, parent_height=frmMain.h)\\n    \\n    if result == DialogResult.YES:\\n        log('Confirm Dialog: Yes clicked')\\n    elif result == DialogResult.NO:\\n        log('Confirm Dialog: No clicked')\\n    else:\\n        log('Confirm Dialog: Cancelled')\\n\\ndef show_list_dialog():\\n    items = ['Option A', 'Option B', 'Option C', 'Option D', 'Option E']\\n    dialog = create_list_dialog('Select Option', items, multi_select=False)\\n    result = dialog.show_dialog(modal=True, parent_x=frmMain.x, parent_y=frmMain.y, parent_width=frmMain.w, parent_height=frmMain.h)\\n    \\n    if result == DialogResult.OK:\\n        values = dialog.get_values()\\n        log(f'List Dialog: Selected={values.get(\\\"selection\\\", \\\"none\\\")}')\\n    else:\\n        log('List Dialog: Cancelled')\\n\\ndef show_progress_dialog():\\n    dialog = create_progress_dialog('Processing', 'Please wait while processing...')\\n    \\n    # Simulate progress\\n    import time\\n    for i in range(0, 101, 10):\\n        progress = dialog.get_value('progress')\\n        if progress:\\n            progress.set_value(i)\\n        time.sleep(0.1)\\n        \\n    dialog.close_dialog(DialogResult.OK)\\n    log('Progress Dialog: Completed')\\n\\ndef show_custom_dialog():\\n    # Create custom settings dialog\\n    dialog = CustomDialog(name_id='customSettings', title='Application Settings', width=50, height=12)\\n    \\n    # Add controls\\n    dialog.add_control(Label(name_id='lblSetting1', caption='Setting 1:', x=2, y=2))\\n    dialog.add_control(TextBox(name_id='txtSetting1', caption='Value 1', x=15, y=2, width=30))\\n    \\n    dialog.add_control(Label(name_id='lblSetting2', caption='Setting 2:', x=2, y=4))\\n    dialog.add_control(CheckBox(name_id='chkSetting2', caption='Enable feature', checked=True, x=15, y=4))\\n    \\n    dialog.add_control(Label(name_id='lblSetting3', caption='Setting 3:', x=2, y=6))\\n    dialog.add_control(ComboBox(name_id='cboSetting3', items=['Low', 'Medium', 'High'], selected_index=1, x=15, y=6, width=20))\\n    \\n    # Custom buttons\\n    dialog.clear_buttons()\\n    dialog.add_button('Save', DialogResult.OK, default=True)\\n    dialog.add_button('Cancel', DialogResult.CANCEL, cancel=True)\\n    dialog.add_button('Apply', DialogResult.NONE)\\n    \\n    result = dialog.show_dialog(modal=True, parent_x=frmMain.x, parent_y=frmMain.y, parent_width=frmMain.w, parent_height=frmMain.h)\\n    \\n    if result == DialogResult.OK:\\n        values = dialog.get_values()\\n        log(f'Custom Dialog: Saved settings')\\n        log(f'  Setting 1: {values.get(\\\"txtSetting1\\\", \\\"\\\")}')\\n        log(f'  Setting 2: {values.get(\\\"chkSetting2\\\", false)}')\\n        log(f'  Setting 3: {values.get(\\\"cboSetting3\\\", \\\"\\\")}')\\n    else:\\n        log('Custom Dialog: Cancelled')\\n\\ndef on_menu_mnuInput():\\n    show_input_dialog()\\n\\ndef on_menu_mnuConfirm():\\n    show_confirm_dialog()\\n\\ndef on_menu_mnuList():\\n    show_list_dialog()\\n\\ndef on_menu_mnuProgress():\\n    show_progress_dialog()\\n\\ndef on_menu_mnuCustom():\\n    show_custom_dialog()\\n\\ndef on_menu_mnuShowSettings():\\n    # Show settings using custom dialog\\n    show_custom_dialog()\\n"
+}

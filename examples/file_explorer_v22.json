@@ -1,0 +1,74 @@
+{
+  "version": "2.2.0",
+  "x": 2,
+  "y": 2,
+  "w": 76,
+  "h": 20,
+  "title": "File Explorer v2.2",
+  "menu_count": 10,
+  "menu_items": [
+    {"caption": "File", "name_id": "mnuFile", "parent": 0, "has_submenu": true},
+    {"caption": "Refresh", "name_id": "mnuRefresh", "parent": 1, "has_submenu": false},
+    {"caption": "Go to...", "name_id": "mnuGoto", "parent": 1, "has_submenu": false},
+    {"caption": "View", "name_id": "mnuView", "parent": 0, "has_submenu": true},
+    {"caption": "Expand All", "name_id": "mnuExpand", "parent": 4, "has_submenu": false},
+    {"caption": "Collapse All", "name_id": "mnuCollapse", "parent": 4, "has_submenu": false},
+    {"caption": "Tools", "name_id": "mnuTools", "parent": 0, "has_submenu": true},
+    {"caption": "New Folder", "name_id": "mnuNewFolder", "parent": 7, "has_submenu": false},
+    {"caption": "Delete", "name_id": "mnuDelete", "parent": 7, "has_submenu": false},
+    {"caption": "Properties", "name_id": "mnuProperties", "parent": 7, "has_submenu": false}
+  ],
+  "controls": [
+    {
+      "x": 2,
+      "y": 2,
+      "w": 25,
+      "h": 14,
+      "tool_type": 17,
+      "name_id": "treeFiles",
+      "caption": "",
+      "code": "def on_node_click_treeFiles():\\n    node = treeFiles.get_selected()\\n    if node:\\n        update_file_list(node.tag)\\n        lblStatus.set_panel_text(0, node.text)\\n\\ndef on_node_expand_treeFiles():\\n    # Lazy load children\\n    node = treeFiles.get_selected()\\n    if node and node.tag:\\n        load_directory(node, node.tag)\\n",
+      "tree_nodes": []
+    },
+    {
+      "x": 29,
+      "y": 2,
+      "w": 45,
+      "h": 8,
+      "tool_type": 16,
+      "name_id": "gridFiles",
+      "caption": "",
+      "code": "def on_cell_click_gridFiles():\\n    row = gridFiles.selected_row\\n    if row >= 0 and row < len(gridFiles.grid_data):\\n        filename = gridFiles.grid_data[row][0]\\n        lblStatus.set_panel_text(0, f'Selected: {filename}')\\n",
+      "grid_headers": ["Name", "Size", "Modified"],
+      "grid_data": [],
+      "grid_row_count": 0,
+      "grid_col_count": 3
+    },
+    {
+      "x": 29,
+      "y": 11,
+      "w": 45,
+      "h": 5,
+      "tool_type": 14,
+      "name_id": "txtPreview",
+      "caption": "File preview will appear here...",
+      "code": "def on_change_txtPreview():\\n    pass\\n"
+    },
+    {
+      "x": 2,
+      "y": 17,
+      "w": 72,
+      "h": 1,
+      "tool_type": 22,
+      "name_id": "lblStatus",
+      "caption": "",
+      "code": "",
+      "panels": [
+        {"text": "Ready", "width": 40, "auto_size": 1},
+        {"text": "Items: 0", "width": 12, "auto_size": 0},
+        {"text": "Size: --", "width": 15, "auto_size": 0}
+      ]
+    }
+  ],
+  "code": "current_path = ''\\nselected_file = ''\\n\\ndef on_load_frmMain():\\n    # Initialize with home directory\\n    load_root_directories()\\n    lblStatus.set_panel_text(0, 'File Explorer ready')\\n\\ndef load_root_directories():\\n    treeFiles.clear()\\n    \\n    # Add common roots\\n    root = treeFiles.add_root_node('Computer', icon='C')\\n    \\n    # Add sample directories\\n    home = root.add_child('Home', icon='H')\\n    home.tag = '/home/user'\\n    \\n    docs = home.add_child('Documents', icon='D')\\n    docs.tag = '/home/user/documents'\\n    \\n    pics = home.add_child('Pictures', icon='P')\\n    pics.tag = '/home/user/pictures'\\n    \\n    music = home.add_child('Music', icon='M')\\n    music.tag = '/home/user/music'\\n    \\n    downloads = home.add_child('Downloads', icon='V')\\n    downloads.tag = '/home/user/downloads'\\n    \\n    # Expand home\\n    treeFiles.expand_node(home)\\n    \\n    # Load initial content\\n    load_directory(home, home.tag)\\n    current_path = home.tag\\n\\ndef load_directory(parent_node, path):\\n    # Clear existing children\\n    parent_node.children = []\\n    \\n    # Add placeholder items (in real app, would scan directory)\\n    items = [\\n        ('Folder1', 'folder'),\\n        ('Folder2', 'folder'),\\n        ('file1.txt', 'file'),\\n        ('file2.txt', 'file'),\\n    ]\\n    \\n    for name, type in items:\\n        icon = 'F' if type == 'folder' else 'f'\\n        child = parent_node.add_child(name, icon=icon)\\n        child.tag = path + '/' + name\\n        \\n        if type == 'folder':\\n            # Add dummy child for expand indicator\\n            child.add_child('Loading...', icon=' ')\\n            \\n    treeFiles._update_visible_nodes()\\n\\ndef update_file_list(path):\\n    current_path = path\\n    \\n    # Simulate file listing\\n    files = [\\n        ['document.txt', '1.2 KB', '2024-01-15'],\\n        ['image.png', '45.6 KB', '2024-01-14'],\\n        ['data.csv', '12.8 KB', '2024-01-13'],\\n        ['script.py', '3.4 KB', '2024-01-12'],\\n    ]\\n    \\n    gridFiles.grid_data = files\\n    gridFiles.grid_row_count = len(files)\\n    \\n    total_size = '62.0 KB'\\n    lblStatus.set_panel_text(1, f'Items: {len(files)}')\\n    lblStatus.set_panel_text(2, f'Size: {total_size}')\\n    \\n    # Show preview of first file\\n    if files:\\n        txtPreview.caption = f'Preview of {files[0][0]}:\\\\n\\\\nThis is a sample file preview.\\\\nIn a real application, this would\\\\nshow the actual file contents.'\\n\\ndef on_menu_mnuRefresh():\\n    load_root_directories()\\n    lblStatus.set_panel_text(0, 'Refreshed')\\n\\ndef on_menu_mnuGoto():\\n    path = input_box('Enter path:', 'Go To', current_path)\\n    if path:\\n        lblStatus.set_panel_text(0, f'Navigating to: {path}')\\n\\ndef on_menu_mnuExpand():\\n    expand_all_nodes(treeFiles)\\n    lblStatus.set_panel_text(0, 'All nodes expanded')\\n\\ndef on_menu_mnuCollapse():\\n    collapse_all_nodes(treeFiles)\\n    lblStatus.set_panel_text(0, 'All nodes collapsed')\\n\\ndef on_menu_mnuNewFolder():\\n    name = input_box('Folder name:', 'New Folder', 'NewFolder')\\n    if name:\\n        msgbox(f'Created folder: {name}', 'New Folder')\\n        lblStatus.set_panel_text(0, f'Created: {name}')\\n\\ndef on_menu_mnuDelete():\\n    if selected_file:\\n        if confirm_dialog(f'Delete {selected_file}?', 'Confirm'):\\n            lblStatus.set_panel_text(0, f'Deleted: {selected_file}')\\n    else:\\n        msgbox('No file selected', 'Delete')\\n\\ndef on_menu_mnuProperties():\\n    if selected_file:\\n        info = f'File: {selected_file}\\\\nSize: 1.2 KB\\\\nModified: 2024-01-15\\\\nType: Text Document'\\n        msgbox(info, 'Properties')\\n    else:\\n        msgbox('No file selected', 'Properties')\\n"
+}

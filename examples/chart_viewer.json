@@ -1,0 +1,82 @@
+{
+  "version": "2.2.0",
+  "x": 5,
+  "y": 3,
+  "w": 70,
+  "h": 18,
+  "title": "Chart Viewer",
+  "menu_count": 8,
+  "menu_items": [
+    {"caption": "File", "name_id": "mnuFile", "parent": 0, "has_submenu": true},
+    {"caption": "Load Data...", "name_id": "mnuLoad", "parent": 1, "has_submenu": false},
+    {"caption": "Save Chart", "name_id": "mnuSave", "parent": 1, "has_submenu": false},
+    {"caption": "Chart", "name_id": "mnuChart", "parent": 0, "has_submenu": true},
+    {"caption": "Bar Chart", "name_id": "mnuBar", "parent": 4, "has_submenu": false},
+    {"caption": "Line Chart", "name_id": "mnuLine", "parent": 4, "has_submenu": false},
+    {"caption": "Pie Chart", "name_id": "mnuPie", "parent": 4, "has_submenu": false},
+    {"caption": "Sample Data", "name_id": "mnuSample", "parent": 0, "has_submenu": false}
+  ],
+  "controls": [
+    {
+      "x": 2,
+      "y": 2,
+      "w": 45,
+      "h": 12,
+      "tool_type": 25,
+      "name_id": "chartDisplay",
+      "caption": "",
+      "code": "def on_point_click_chartDisplay():\\n    msgbox(f'Point clicked: {chartDisplay.selected_point}', 'Chart')\\n",
+      "chart_type": 0,
+      "title": "Sales Data",
+      "x_label": "Month",
+      "y_label": "Sales ($)",
+      "show_legend": true,
+      "show_grid": true
+    },
+    {
+      "x": 49,
+      "y": 2,
+      "w": 18,
+      "h": 8,
+      "tool_type": 16,
+      "name_id": "gridData",
+      "caption": "",
+      "code": "def on_cell_edit_gridData():\\n    update_chart_from_grid()\\n",
+      "grid_headers": ["Label", "Value"],
+      "grid_data": [
+        ["Jan", "100"],
+        ["Feb", "150"],
+        ["Mar", "120"],
+        ["Apr", "180"],
+        ["May", "200"]
+      ],
+      "grid_row_count": 5,
+      "grid_col_count": 2
+    },
+    {
+      "x": 49,
+      "y": 11,
+      "w": 18,
+      "h": 3,
+      "tool_type": 3,
+      "name_id": "btnUpdate",
+      "caption": "Update Chart",
+      "code": "def on_click_btnUpdate():\\n    update_chart_from_grid()\\n    lblStatus.set_panel_text(0, 'Chart updated')\\n"
+    },
+    {
+      "x": 2,
+      "y": 15,
+      "w": 65,
+      "h": 1,
+      "tool_type": 22,
+      "name_id": "lblStatus",
+      "caption": "",
+      "code": "",
+      "panels": [
+        {"text": "Ready", "width": 40, "auto_size": 1},
+        {"text": "Type: Bar", "width": 12, "auto_size": 0}
+      ]
+    }
+  ],
+  "code": "def on_load_frmMain():\\n    update_chart_from_grid()\\n    lblStatus.set_panel_text(0, 'Chart Viewer ready')\\n\\ndef update_chart_from_grid():\\n    # Clear existing series\\n    chartDisplay.clear_series()\\n    \\n    # Get data from grid\\n    labels = []\\n    values = []\\n    \\n    for row in gridData.grid_data:\\n        if len(row) >= 2:\\n            labels.append(row[0])\\n            try:\\n                values.append(float(row[1]))\\n            except:\\n                values.append(0)\\n    \\n    # Create series\\n    if values:\\n        series = chartDisplay.add_series('Data', color='green')\\n        for i, (label, value) in enumerate(zip(labels, values)):\\n            series.add_point(i, value)\\n        \\n        chartDisplay.title = 'Sales Data'\\n        lblStatus.set_panel_text(1, f'Type: {get_chart_type_name()}')\\n\\ndef get_chart_type_name():\\n    types = ['Bar', 'Line', 'Pie']\\n    return types[chartDisplay.chart_type] if chartDisplay.chart_type < 3 else 'Unknown'\\n\\ndef on_menu_mnuLoad():\\n    filename = file_dialog('open', ['.csv', '.txt'])\\n    if filename:\\n        # Load CSV data\\n        handle = open_file(filename, 'r')\\n        if handle:\\n            gridData.grid_data = []\\n            line = read_line(handle)\\n            while line:\\n                parts = line.split(',')\\n                if len(parts) >= 2:\\n                    gridData.grid_data.append([parts[0], parts[1]])\\n                line = read_line(handle)\\n            close_file(handle)\\n            gridData.grid_row_count = len(gridData.grid_data)\\n            update_chart_from_grid()\\n            msgbox(f'Loaded {len(gridData.grid_data)} rows', 'Load')\\n\\ndef on_menu_mnuSave():\\n    filename = file_dialog('save', ['.txt'])\\n    if filename:\\n        # Save chart as text representation\\n        msgbox('Chart saved as text', 'Save')\\n\\ndef on_menu_mnuBar():\\n    chartDisplay.set_chart_type(0)\\n    lblStatus.set_panel_text(1, 'Type: Bar')\\n\\ndef on_menu_mnuLine():\\n    chartDisplay.set_chart_type(1)\\n    lblStatus.set_panel_text(1, 'Type: Line')\\n\\ndef on_menu_mnuPie():\\n    chartDisplay.set_chart_type(2)\\n    lblStatus.set_panel_text(1, 'Type: Pie')\\n\\ndef on_menu_mnuSample():\\n    # Load sample data\\n    sample_data = [\\n        ['Jan', '100'],\\n        ['Feb', '150'],\\n        ['Mar', '120'],\\n        ['Apr', '180'],\\n        ['May', '200'],\\n        ['Jun', '170'],\\n        ['Jul', '220'],\\n        ['Aug', '190']\\n    ]\\n    gridData.grid_data = sample_data\\n    gridData.grid_row_count = len(sample_data)\\n    update_chart_from_grid()\\n    lblStatus.set_panel_text(0, 'Sample data loaded')\\n"
+}

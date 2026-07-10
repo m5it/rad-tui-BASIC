@@ -1,0 +1,100 @@
+{
+  "version": "2.2.0",
+  "x": 10,
+  "y": 5,
+  "w": 60,
+  "h": 14,
+  "title": "Color Picker Demo",
+  "menu_count": 6,
+  "menu_items": [
+    {"caption": "Color", "name_id": "mnuColor", "parent": 0, "has_submenu": true},
+    {"caption": "Copy Hex", "name_id": "mnuCopyHex", "parent": 1, "has_submenu": false},
+    {"caption": "Copy RGB", "name_id": "mnuCopyRGB", "parent": 1, "has_submenu": false},
+    {"caption": "Palettes", "name_id": "mnuPalettes", "parent": 0, "has_submenu": true},
+    {"caption": "Basic Colors", "name_id": "mnuBasic", "parent": 4, "has_submenu": false},
+    {"caption": "Web Colors", "name_id": "mnuWeb", "parent": 4, "has_submenu": false}
+  ],
+  "controls": [
+    {
+      "x": 2,
+      "y": 2,
+      "w": 30,
+      "h": 8,
+      "tool_type": 24,
+      "name_id": "colorPicker",
+      "caption": "",
+      "code": "def on_color_change_colorPicker():\\n    color = colorPicker.get_color()\\n    lblHex.caption = f'Hex: {color.to_hex()}'\\n    lblRGB.caption = f'RGB: {color.r}, {color.g}, {color.b}'\\n    lblTerminal.caption = f'Terminal: {color.to_terminal_color()}'\\n    update_preview()\\n\\ndef on_color_select_colorPicker():\\n    color = colorPicker.get_color()\\n    msgbox(f'Selected: {color.to_hex()}', 'Color')\\n",
+      "current_color": "#808080",
+      "show_preview": true,
+      "display_mode": 0
+    },
+    {
+      "x": 34,
+      "y": 2,
+      "w": 10,
+      "h": 3,
+      "tool_type": 1,
+      "name_id": "lblPreview",
+      "caption": "Preview",
+      "back_color": "#808080"
+    },
+    {
+      "x": 34,
+      "y": 6,
+      "w": 24,
+      "h": 1,
+      "tool_type": 1,
+      "name_id": "lblHex",
+      "caption": "Hex: #808080"
+    },
+    {
+      "x": 34,
+      "y": 8,
+      "w": 24,
+      "h": 1,
+      "tool_type": 1,
+      "name_id": "lblRGB",
+      "caption": "RGB: 128, 128, 128"
+    },
+    {
+      "x": 34,
+      "y": 10,
+      "w": 24,
+      "h": 1,
+      "tool_type": 1,
+      "name_id": "lblTerminal",
+      "caption": "Terminal: 244"
+    },
+    {
+      "x": 2,
+      "y": 11,
+      "w": 15,
+      "h": 1,
+      "tool_type": 3,
+      "name_id": "btnApply",
+      "caption": "Apply",
+      "code": "def on_click_btnApply():\\n    color = colorPicker.get_color()\\n    msgbox(f'Color applied: {color.to_hex()}', 'Apply')\\n"
+    },
+    {
+      "x": 18,
+      "y": 11,
+      "w": 15,
+      "h": 1,
+      "tool_type": 3,
+      "name_id": "btnRandom",
+      "caption": "Random",
+      "code": "def on_click_btnRandom():\\n    import random\\n    r = random.randint(0, 255)\\n    g = random.randint(0, 255)\\n    b = random.randint(0, 255)\\n    color = Color(r, g, b)\\n    colorPicker.set_color(color)\\n"
+    },
+    {
+      "x": 34,
+      "y": 11,
+      "w": 15,
+      "h": 1,
+      "tool_type": 3,
+      "name_id": "btnReset",
+      "caption": "Reset",
+      "code": "def on_click_btnReset():\\n    colorPicker.set_color('#808080')\\n"
+    }
+  ],
+  "code": "selected_color = Color(128, 128, 128)\\n\\ndef on_load_frmMain():\\n    update_preview()\\n\\ndef update_preview():\\n    color = colorPicker.get_color()\\n    lblPreview.back_color = color.to_hex()\\n    lblPreview.fore_color = '#FFFFFF' if color.r + color.g + color.b < 384 else '#000000'\\n\\ndef on_menu_mnuCopyHex():\\n    color = colorPicker.get_color()\\n    # Copy to clipboard (would use system clipboard in real app)\\n    msgbox(f'Copied: {color.to_hex()}', 'Copy Hex')\\n\\ndef on_menu_mnuCopyRGB():\\n    color = colorPicker.get_color()\\n    rgb = f'{color.r}, {color.g}, {color.b}'\\n    msgbox(f'Copied: {rgb}', 'Copy RGB')\\n\\ndef on_menu_mnuBasic():\\n    # Set basic color palette\\n    basic_colors = [\\n        '#000000', '#FF0000', '#00FF00', '#0000FF',\\n        '#FFFF00', '#00FFFF', '#FF00FF', '#FFFFFF',\\n        '#808080', '#C0C0C0', '#800000', '#808000'\\n    ]\\n    colorPicker.set_palette(basic_colors)\\n    msgbox('Basic palette loaded', 'Palette')\\n\\ndef on_menu_mnuWeb():\\n    # Set web-safe color palette\\n    web_colors = [\\n        '#000000', '#333333', '#666666', '#999999', '#CCCCCC', '#FFFFFF',\\n        '#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#00FFFF', '#FF00FF',\\n        '#800000', '#008000', '#000080', '#808000', '#008080', '#800080'\\n    ]\\n    colorPicker.set_palette(web_colors)\\n    msgbox('Web colors palette loaded', 'Palette')\\n"
+}

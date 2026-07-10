@@ -1,0 +1,189 @@
+{
+  "version": "2.2.0",
+  "x": 5,
+  "y": 3,
+  "w": 70,
+  "h": 18,
+  "title": "Tabbed Interface Demo",
+  "menu_count": 8,
+  "menu_items": [
+    {"caption": "Tabs", "name_id": "mnuTabs", "parent": 0, "has_submenu": true},
+    {"caption": "Add Tab", "name_id": "mnuAddTab", "parent": 1, "has_submenu": false},
+    {"caption": "Remove Tab", "name_id": "mnuRemoveTab", "parent": 1, "has_submenu": false},
+    {"caption": "Next Tab", "name_id": "mnuNext", "parent": 1, "has_submenu": false},
+    {"caption": "Previous Tab", "name_id": "mnuPrev", "parent": 1, "has_submenu": false},
+    {"caption": "Settings", "name_id": "mnuSettings", "parent": 0, "has_submenu": true},
+    {"caption": "Save Settings", "name_id": "mnuSave", "parent": 6, "has_submenu": false},
+    {"caption": "Reset Defaults", "name_id": "mnuReset", "parent": 6, "has_submenu": false}
+  ],
+  "controls": [
+    {
+      "x": 2,
+      "y": 2,
+      "w": 66,
+      "h": 14,
+      "tool_type": 18,
+      "name_id": "tabMain",
+      "caption": "",
+      "code": "def on_tab_change_tabMain():\\n    idx = tabMain.get_active_index()\\n    tab = tabMain.get_active_tab()\\n    lblStatus.set_panel_text(0, f'Active: {tab.caption}')\\n\\ndef on_tab_click_tabMain():\\n    pass\\n",
+      "tabs": [
+        {"caption": "General", "name_id": "tabGeneral"},
+        {"caption": "Appearance", "name_id": "tabAppearance"},
+        {"caption": "Network", "name_id": "tabNetwork"}
+      ]
+    },
+    {
+      "x": 4,
+      "y": 5,
+      "w": 20,
+      "h": 1,
+      "tool_type": 1,
+      "name_id": "lblName",
+      "caption": "User Name:",
+      "parent_tab": 0
+    },
+    {
+      "x": 26,
+      "y": 5,
+      "w": 30,
+      "h": 1,
+      "tool_type": 14,
+      "name_id": "txtName",
+      "caption": "John Doe",
+      "parent_tab": 0
+    },
+    {
+      "x": 4,
+      "y": 7,
+      "w": 20,
+      "h": 1,
+      "tool_type": 1,
+      "name_id": "lblEmail",
+      "caption": "Email:",
+      "parent_tab": 0
+    },
+    {
+      "x": 26,
+      "y": 7,
+      "w": 30,
+      "h": 1,
+      "tool_type": 14,
+      "name_id": "txtEmail",
+      "caption": "john@example.com",
+      "parent_tab": 0
+    },
+    {
+      "x": 4,
+      "y": 9,
+      "w": 20,
+      "h": 1,
+      "tool_type": 13,
+      "name_id": "chkNotifications",
+      "caption": "Enable Notifications",
+      "checked": true,
+      "parent_tab": 0
+    },
+    {
+      "x": 4,
+      "y": 5,
+      "w": 20,
+      "h": 1,
+      "tool_type": 1,
+      "name_id": "lblTheme",
+      "caption": "Theme:",
+      "parent_tab": 1
+    },
+    {
+      "x": 26,
+      "y": 5,
+      "w": 25,
+      "h": 5,
+      "tool_type": 12,
+      "name_id": "lstTheme",
+      "caption": "",
+      "items": ["Light", "Dark", "High Contrast", "Terminal"],
+      "selected_index": 1,
+      "parent_tab": 1
+    },
+    {
+      "x": 4,
+      "y": 11,
+      "w": 20,
+      "h": 1,
+      "tool_type": 1,
+      "name_id": "lblFontSize",
+      "caption": "Font Size:",
+      "parent_tab": 1
+    },
+    {
+      "x": 26,
+      "y": 11,
+      "w": 30,
+      "h": 1,
+      "tool_type": 20,
+      "name_id": "sliderFontSize",
+      "caption": "",
+      "min_value": 8,
+      "max_value": 24,
+      "current_value": 12,
+      "parent_tab": 1
+    },
+    {
+      "x": 4,
+      "y": 5,
+      "w": 20,
+      "h": 1,
+      "tool_type": 1,
+      "name_id": "lblProxy",
+      "caption": "Proxy Server:",
+      "parent_tab": 2
+    },
+    {
+      "x": 26,
+      "y": 5,
+      "w": 30,
+      "h": 1,
+      "tool_type": 14,
+      "name_id": "txtProxy",
+      "caption": "proxy.example.com:8080",
+      "parent_tab": 2
+    },
+    {
+      "x": 4,
+      "y": 7,
+      "w": 20,
+      "h": 1,
+      "tool_type": 13,
+      "name_id": "chkSSL",
+      "caption": "Use SSL",
+      "checked": true,
+      "parent_tab": 2
+    },
+    {
+      "x": 4,
+      "y": 9,
+      "w": 20,
+      "h": 1,
+      "tool_type": 13,
+      "name_id": "chkAutoConnect",
+      "caption": "Auto-connect on startup",
+      "checked": false,
+      "parent_tab": 2
+    },
+    {
+      "x": 2,
+      "y": 17,
+      "w": 66,
+      "h": 1,
+      "tool_type": 22,
+      "name_id": "lblStatus",
+      "caption": "",
+      "code": "",
+      "panels": [
+        {"text": "Settings Demo", "width": 30, "auto_size": 1},
+        {"text": "Tab: General", "width": 20, "auto_size": 0}
+      ]
+    }
+  ],
+  "code": "tab_count = 3\\n\\ndef on_load_frmMain():\\n    lblStatus.set_panel_text(0, 'Tabbed interface demo loaded')\\n    # Set initial tab\\n    tabMain.set_active_tab(0)\\n\\ndef on_menu_mnuAddTab():\\n    global tab_count\\n    tab_count += 1\\n    new_tab = tabMain.add_tab(f'Tab {tab_count}', f'tab{tab_count}')\\n    \\n    # Add a label to new tab\\n    # In real implementation, would add controls to new tab\\n    \\n    lblStatus.set_panel_text(0, f'Added tab {tab_count}')\\n\\ndef on_menu_mnuRemoveTab():\\n    global tab_count\\n    idx = tabMain.get_active_index()\\n    if tabMain.get_tab_count() > 1:\\n        tabMain.remove_tab(idx)\\n        tab_count -= 1\\n        lblStatus.set_panel_text(0, f'Removed tab at index {idx}')\\n    else:\\n        msgbox('Cannot remove last tab', 'Error')\\n\\ndef on_menu_mnuNext():\\n    tabMain.next_tab()\\n    update_status()\\n\\ndef on_menu_mnuPrev():\\n    tabMain.prev_tab()\\n    update_status()\\n\\ndef on_menu_mnuSave():\\n    # Collect settings from all tabs\\n    settings = {\\n        'name': txtName.caption,\\n        'email': txtEmail.caption,\\n        'notifications': chkNotifications.checked,\\n        'theme': lstTheme.items[lstTheme.selected_index] if lstTheme.selected_index >= 0 else 'Dark',\\n        'font_size': sliderFontSize.current_value,\\n        'proxy': txtProxy.caption,\\n        'ssl': chkSSL.checked,\\n        'auto_connect': chkAutoConnect.checked\\n    }\\n    \\n    # Save to file\\n    handle = open_file('settings.txt', 'w')\\n    if handle:\\n        for key, value in settings.items():\\n            write_line(handle, f'{key}={value}')\\n        close_file(handle)\\n        msgbox('Settings saved!', 'Save')\\n        lblStatus.set_panel_text(0, 'Settings saved')\\n\\ndef on_menu_mnuReset():\\n    # Reset to defaults\\n    txtName.caption = 'John Doe'\\n    txtEmail.caption = 'john@example.com'\\n    chkNotifications.checked = true\\n    lstTheme.selected_index = 1\\n    sliderFontSize.current_value = 12\\n    txtProxy.caption = ''\\n    chkSSL.checked = true\\n    chkAutoConnect.checked = false\\n    \\n    lblStatus.set_panel_text(0, 'Settings reset to defaults')\\n\\ndef update_status():\\n    idx = tabMain.get_active_index()\\n    tab = tabMain.get_active_tab()\\n    if tab:\\n        lblStatus.set_panel_text(1, f'Tab: {tab.caption}')\\n"
+}

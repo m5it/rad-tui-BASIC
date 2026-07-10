@@ -1,0 +1,72 @@
+{
+  "version": "2.2.0",
+  "x": 2,
+  "y": 2,
+  "w": 76,
+  "h": 20,
+  "title": "Database Browser v2.2",
+  "menu_count": 10,
+  "menu_items": [
+    {"caption": "Database", "name_id": "mnuDatabase", "parent": 0, "has_submenu": true},
+    {"caption": "Connect...", "name_id": "mnuConnect", "parent": 1, "has_submenu": false},
+    {"caption": "Disconnect", "name_id": "mnuDisconnect", "parent": 1, "has_submenu": false},
+    {"caption": "Tables", "name_id": "mnuTables", "parent": 0, "has_submenu": true},
+    {"caption": "Refresh Schema", "name_id": "mnuRefreshSchema", "parent": 4, "has_submenu": false},
+    {"caption": "Query", "name_id": "mnuQuery", "parent": 0, "has_submenu": true},
+    {"caption": "Execute", "name_id": "mnuExecute", "parent": 7, "has_submenu": false},
+    {"caption": "Clear Results", "name_id": "mnuClear", "parent": 7, "has_submenu": false},
+    {"caption": "Sample Data", "name_id": "mnuSample", "parent": 0, "has_submenu": false},
+    {"caption": "Create Sample DB", "name_id": "mnuCreateSample", "parent": 10, "has_submenu": false}
+  ],
+  "controls": [
+    {
+      "x": 2,
+      "y": 3,
+      "w": 20,
+      "h": 10,
+      "tool_type": 17,
+      "name_id": "treeSchema",
+      "caption": "",
+      "code": "def on_node_click_treeSchema():\\n    node = treeSchema.get_selected()\\n    if node and node.parent:\\n        if node.parent.text == 'Tables':\\n            load_table_data(node.text)\\n            lblStatus.set_panel_text(0, f'Selected: {node.text}')\\n\\ndef on_node_expand_treeSchema():\\n    pass\\n",
+      "tree_nodes": []
+    },
+    {
+      "x": 24,
+      "y": 3,
+      "w": 50,
+      "h": 6,
+      "tool_type": 15,
+      "name_id": "txtQuery",
+      "caption": "SELECT * FROM users LIMIT 10",
+      "code": "def on_change_txtQuery():\\n    pass\\n"
+    },
+    {
+      "x": 24,
+      "y": 10,
+      "w": 50,
+      "h": 8,
+      "tool_type": 16,
+      "name_id": "gridResults",
+      "caption": "",
+      "code": "",
+      "grid_headers": ["Result"],
+      "grid_data": []
+    },
+    {
+      "x": 2,
+      "y": 14,
+      "w": 72,
+      "h": 1,
+      "tool_type": 22,
+      "name_id": "statusBar",
+      "caption": "",
+      "code": "",
+      "panels": [
+        {"text": "Ready", "width": 30, "auto_size": 1},
+        {"text": "Rows: 0", "width": 12, "auto_size": 0},
+        {"text": "Not Connected", "width": 15, "auto_size": 0}
+      ]
+    }
+  ],
+  "code": "db = None\\ncurrent_table = ''\\n\\ndef on_load_frmMain():\\n    global db\\n    db = Database()\\n    lblStatus.set_panel_text(0, 'Ready - Connect to database')\\n    \\ndef on_menu_mnuConnect():\\n    global db\\n    filename = file_dialog('open', ['.db', '.sqlite', '.sqlite3', '*'])\\n    if filename:\\n        if db.connect(filename):\\n            lblStatus.set_panel_text(2, f'Connected: {filename.split(\\\"/\\\")[-1]}')\\n            refresh_schema()\\n            msgbox('Connected successfully!', 'Database')\\n        else:\\n            msgbox('Failed to connect to database', 'Error')\\n\\ndef on_menu_mnuDisconnect():\\n    global db\\n    if db:\\n        db.disconnect()\\n        lblStatus.set_panel_text(2, 'Not Connected')\\n        lblStatus.set_panel_text(0, 'Disconnected')\\n        treeSchema.root_nodes = []\\n        gridResults.grid_data = []\\n\\ndef on_menu_mnuRefreshSchema():\\n    refresh_schema()\\n\\ndef refresh_schema():\\n    global db\\n    if not db or not db.is_connected():\\n        msgbox('Not connected to database', 'Error')\\n        return\\n        \\n    treeSchema.clear()\\n    \\n    # Add Tables node\\n    tables_node = treeSchema.add_root_node('Tables', icon='T')\\n    \\n    tables = db.get_tables()\\n    for table in tables:\\n        table_node = tables_node.add_child(table, icon='t')\\n        \\n        # Add columns\\n        columns = db.get_columns(table)\\n        for col in columns:\\n            col_text = f'{col[\\\"name\\\"]} ({col[\\\"type\\\"]})'\\n            table_node.add_child(col_text, icon='c')\\n            \\n    treeSchema.expand_node(tables_node)\\n    lblStatus.set_panel_text(0, f'{len(tables)} tables loaded')\\n\\ndef load_table_data(table_name):\\n    global db, current_table\\n    if not db or not db.is_connected():\\n        return\\n        \\n    current_table = table_name\\n    query = f'SELECT * FROM {table_name} LIMIT 100'\\n    execute_query(query)\\n\\ndef on_menu_mnuExecute():\\n    query = txtQuery.caption\\n    execute_query(query)\\n\\ndef execute_query(query):\\n    global db\\n    if not db or not db.is_connected():\\n        msgbox('Not connected to database', 'Error')\\n        return\\n        \\n    result = db.execute_query(query)\\n    \\n    if result.error:\\n        msgbox(f'Query error: {result.error}', 'Error')\\n        lblStatus.set_panel_text(0, 'Query failed')\\n    else:\\n        # Update grid\\n        gridResults.grid_headers = result.columns\\n        gridResults.grid_data = [list(row) for row in result.rows]\\n        gridResults.grid_row_count = len(result.rows)\\n        gridResults.grid_col_count = len(result.columns)\\n        \\n        lblStatus.set_panel_text(1, f'Rows: {result.row_count}')\\n        lblStatus.set_panel_text(0, 'Query executed successfully')\\n\\ndef on_menu_mnuClear():\\n    gridResults.grid_data = []\\n    gridResults.grid_row_count = 0\\n    lblStatus.set_panel_text(1, 'Rows: 0')\\n\\ndef on_menu_mnuCreateSample():\\n    global db\\n    filename = file_dialog('save', ['.db'])\\n    if filename:\\n        if db.connect(filename):\\n            create_sample_database(db)\\n            lblStatus.set_panel_text(2, f'Connected: {filename.split(\\\"/\\\")[-1]}')\\n            refresh_schema()\\n            msgbox('Sample database created!', 'Database')\\n"
+}

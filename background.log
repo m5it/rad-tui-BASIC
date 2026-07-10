@@ -546,3 +546,277 @@
 [09:29:24] INFO: AI response: 29120 prompt + 390 response tokens (total: 778257 / 25788)
 [09:29:24] You: 
 [09:29:28] You: 
+[15:28:15] INFO: Session started, sess_id=321, mode=build, model=kimi-k2.5:cloud
+[15:28:15] You: 
+[15:28:19] You: 
+[15:28:26] You: 
+[15:28:31] You: 
+[15:28:35] You: 
+[15:28:38] You: 
+[15:28:58] INFO: AI request (iteration 1, msgs=51)
+[15:29:06] INFO: AI response: 29555 prompt + 584 response tokens (total: 807812 / 26372)
+[15:29:06] INFO: AI request (iteration 2, msgs=53)
+[15:29:07] INFO: AI response: 29951 prompt + 42 response tokens (total: 837763 / 26414)
+[15:29:07] INFO: AI request (iteration 3, msgs=55)
+[15:29:09] <nextTask>in_progress</nextTask>⚠ Model repeated itself — auto-cancelled
+[15:29:09] You: 
+[15:29:22] You: 
+[15:30:16] INFO: AI request (iteration 1, msgs=56)
+[15:30:26] INFO: AI response: 30011 prompt + 458 response tokens (total: 867774 / 26872)
+[15:30:26] INFO: AI request (iteration 2, msgs=58)
+[15:30:28] <Create
+[Aborted: 'CreateFile' cannot be used in PLAN mode]
+[15:30:28] Stream aborted: 'CreateFile' cannot be used in PLAN mode
+[15:30:28] INFO: AI response: 0 prompt + 0 response tokens (total: 867774 / 26872)
+[15:30:28] You: 
+[15:30:33] You: 
+[15:31:05] INFO: Session started, sess_id=322, mode=plan, model=kimi-k2.5:cloud
+[15:31:05] Choose persona START...: 
+[15:31:05] Choose available number (x to cancel): 
+[15:31:08] Set system message ( CTRL+x ENTER to Finish. ): 
+[15:31:10] Choose history START...: 
+[15:31:10] Choose available number (x to cancel): 
+[15:31:13] Canceling...
+[15:31:13] You: 
+[15:31:18] You: 
+[15:32:37] INFO: AI request (iteration 1, msgs=2)
+[15:32:39] INFO: AI response: 1935 prompt + 139 response tokens (total: 1935 / 139)
+[15:32:39] INFO: AI request (iteration 2, msgs=4)
+[15:32:41] INFO: AI response: 2370 prompt + 65 response tokens (total: 4305 / 204)
+[15:32:41] INFO: AI request (iteration 3, msgs=8)
+[15:32:47] INFO: AI response: 62773 prompt + 330 response tokens (total: 67078 / 534)
+[15:32:47] INFO: AI request (iteration 4, msgs=10)
+[15:32:52] INFO: AI response: 62929 prompt + 357 response tokens (total: 130007 / 891)
+[15:32:52] INFO: AI request (iteration 5, msgs=12)
+[15:32:55] INFO: AI response: 63094 prompt + 148 response tokens (total: 193101 / 1039)
+[15:32:55] INFO: AI request (iteration 6, msgs=14)
+[15:32:58] INFO: AI response: 63245 prompt + 153 response tokens (total: 256346 / 1192)
+[15:32:58] INFO: AI request (iteration 7, msgs=16)
+[15:33:03] INFO: AI response: 63381 prompt + 120 response tokens (total: 319727 / 1312)
+[15:33:03] INFO: AI request (iteration 8, msgs=18)
+[15:33:06] INFO: AI response: 63523 prompt + 130 response tokens (total: 383250 / 1442)
+[15:33:06] INFO: AI request (iteration 9, msgs=20)
+[15:33:09] INFO: AI response: 63663 prompt + 120 response tokens (total: 446913 / 1562)
+[15:33:09] INFO: AI request (iteration 10, msgs=22)
+[15:33:12] INFO: AI response: 63803 prompt + 113 response tokens (total: 510716 / 1675)
+[15:33:12] You: 
+[15:33:48] You: 
+[15:34:05] INFO: AI request (iteration 1, msgs=25)
+[15:34:11] INFO: AI response: 63952 prompt + 172 response tokens (total: 574668 / 1847)
+[15:34:11] INFO: AI request (iteration 2, msgs=27)
+[15:34:15] INFO: AI response: 64115 prompt + 95 response tokens (total: 638783 / 1942)
+[15:34:15] You: 
+[15:34:26] INFO: AI request (iteration 1, msgs=29)
+[15:34:31] INFO: AI response: 64127 prompt + 135 response tokens (total: 702910 / 2077)
+[15:34:31] INFO: AI request (iteration 2, msgs=31)
+[15:34:35] INFO: AI response: 64267 prompt + 141 response tokens (total: 767177 / 2218)
+[15:34:35] INFO: AI request (iteration 3, msgs=33)
+[15:34:38] INFO: AI response: 64418 prompt + 126 response tokens (total: 831595 / 2344)
+[15:34:38] INFO: AI request (iteration 4, msgs=35)
+[15:34:41] INFO: AI response: 64552 prompt + 133 response tokens (total: 896147 / 2477)
+[15:34:41] INFO: AI request (iteration 5, msgs=37)
+[15:34:44] INFO: AI response: 64691 prompt + 120 response tokens (total: 960838 / 2597)
+[15:34:44] INFO: AI request (iteration 6, msgs=39)
+[15:34:47] INFO: AI response: 64824 prompt + 109 response tokens (total: 1025662 / 2706)
+[15:34:47] INFO: AI request (iteration 7, msgs=41)
+[15:34:51] INFO: AI response: 64957 prompt + 108 response tokens (total: 1090619 / 2814)
+[15:34:51] INFO: AI request (iteration 8, msgs=43)
+[15:34:54] INFO: AI response: 65076 prompt + 95 response tokens (total: 1155695 / 2909)
+[15:34:54] INFO: AI request (iteration 9, msgs=45)
+[15:34:56] INFO: AI response: 65191 prompt + 127 response tokens (total: 1220886 / 3036)
+[15:34:56] INFO: AI request (iteration 10, msgs=47)
+[15:34:59] INFO: AI response: 65328 prompt + 112 response tokens (total: 1286214 / 3148)
+[15:34:59] You: 
+[15:35:08] INFO: AI request (iteration 1, msgs=50)
+[15:35:11] INFO: AI response: 65470 prompt + 118 response tokens (total: 1351684 / 3266)
+[15:35:11] INFO: AI request (iteration 2, msgs=52)
+[15:35:13] INFO: AI response: 65594 prompt + 87 response tokens (total: 1417278 / 3353)
+[15:35:13] INFO: AI request (iteration 3, msgs=54)
+[15:35:16] INFO: AI response: 65708 prompt + 97 response tokens (total: 1482986 / 3450)
+[15:35:16] INFO: AI request (iteration 4, msgs=56)
+[15:35:19] INFO: AI response: 65821 prompt + 131 response tokens (total: 1548807 / 3581)
+[15:35:19] INFO: AI request (iteration 5, msgs=58)
+[15:35:21] INFO: AI response: 65979 prompt + 103 response tokens (total: 1614786 / 3684)
+[15:35:21] INFO: AI request (iteration 6, msgs=60)
+[15:35:24] INFO: AI response: 66095 prompt + 109 response tokens (total: 1680881 / 3793)
+[15:35:24] INFO: AI request (iteration 7, msgs=62)
+[15:35:26] INFO: AI response: 66217 prompt + 92 response tokens (total: 1747098 / 3885)
+[15:35:26] INFO: AI request (iteration 8, msgs=64)
+[15:35:29] INFO: AI response: 66328 prompt + 117 response tokens (total: 1813426 / 4002)
+[15:35:29] INFO: AI request (iteration 9, msgs=66)
+[15:35:32] INFO: AI response: 66466 prompt + 114 response tokens (total: 1879892 / 4116)
+[15:35:32] INFO: AI request (iteration 10, msgs=68)
+[15:35:35] INFO: AI response: 66594 prompt + 113 response tokens (total: 1946486 / 4229)
+[15:35:35] You: 
+[15:35:39] INFO: AI request (iteration 1, msgs=71)
+[15:35:43] INFO: AI response: 66723 prompt + 168 response tokens (total: 2013209 / 4397)
+[15:35:43] INFO: AI request (iteration 2, msgs=73)
+[15:35:46] INFO: AI response: 66902 prompt + 189 response tokens (total: 2080111 / 4586)
+[15:35:46] INFO: AI request (iteration 3, msgs=75)
+[15:35:49] INFO: AI response: 67026 prompt + 126 response tokens (total: 2147137 / 4712)
+[15:35:49] INFO: AI request (iteration 4, msgs=77)
+[15:35:51] INFO: AI response: 67173 prompt + 101 response tokens (total: 2214310 / 4813)
+[15:35:51] INFO: AI request (iteration 5, msgs=79)
+[15:35:55] INFO: AI response: 67292 prompt + 173 response tokens (total: 2281602 / 4986)
+[15:35:55] INFO: AI request (iteration 6, msgs=81)
+[15:35:58] INFO: AI response: 67485 prompt + 140 response tokens (total: 2349087 / 5126)
+[15:35:58] INFO: AI request (iteration 7, msgs=83)
+[15:36:01] INFO: AI response: 67637 prompt + 234 response tokens (total: 2416724 / 5360)
+[15:36:01] You: 
+[15:36:22] INFO: AI request (iteration 1, msgs=86)
+[15:36:37] INFO: AI response: 67761 prompt + 2097 response tokens (total: 2484485 / 7457)
+[15:36:37] ✓ WriteFile: Error: Missing required parameter(s): contentOfFile
+Usage:
+<WriteFile>
+<fileName>string</fileName>
+<contentOfFile>string</contentOfFile>
+</WriteFile>
+[15:36:37] INFO: AI request (iteration 2, msgs=88)
+[15:36:42] INFO: AI response: 69860 prompt + 426 response tokens (total: 2554345 / 7883)
+[15:36:42] INFO: AI request (iteration 3, msgs=90)
+[15:36:55] INFO: AI response: 70296 prompt + 2002 response tokens (total: 2624641 / 9885)
+[15:36:55] INFO: AI request (iteration 4, msgs=92)
+[15:37:09] INFO: AI response: 72298 prompt + 1938 response tokens (total: 2696939 / 11823)
+[15:37:09] INFO: AI request (iteration 5, msgs=94)
+[15:37:19] INFO: AI response: 74245 prompt + 1348 response tokens (total: 2771184 / 13171)
+[15:37:19] INFO: AI request (iteration 6, msgs=96)
+[15:37:30] INFO: AI response: 75597 prompt + 1569 response tokens (total: 2846781 / 14740)
+[15:37:30] INFO: AI request (iteration 7, msgs=98)
+[15:37:45] INFO: AI response: 77170 prompt + 1807 response tokens (total: 2923951 / 16547)
+[15:37:45] INFO: AI request (iteration 8, msgs=100)
+[15:37:57] INFO: AI response: 78982 prompt + 1784 response tokens (total: 3002933 / 18331)
+[15:37:57] INFO: AI request (iteration 9, msgs=102)
+[15:38:10] INFO: AI response: 80691 prompt + 2226 response tokens (total: 3083624 / 20557)
+[15:38:10] INFO: AI request (iteration 10, msgs=104)
+[15:38:28] INFO: AI response: 82926 prompt + 2375 response tokens (total: 3166550 / 22932)
+[15:38:28] Auto-continue: AI round 1/50 — task 1/34: Create docs/ROADMAP_V22.md documenting all planned v2.2.0 fe...
+[15:38:28] INFO: AI request (iteration 1, msgs=107)
+[15:38:32] INFO: AI response: 85416 prompt + 179 response tokens (total: 3251966 / 23111)
+[15:38:32] INFO: AI request (iteration 2, msgs=109)
+[15:39:06] INFO: AI response: 85841 prompt + 2167 response tokens (total: 3337807 / 25278)
+[15:39:06] INFO: AI request (iteration 3, msgs=111)
+[15:39:25] INFO: AI response: 88003 prompt + 2731 response tokens (total: 3425810 / 28009)
+[15:39:25] INFO: AI request (iteration 4, msgs=113)
+[15:39:40] INFO: AI response: 90532 prompt + 2477 response tokens (total: 3516342 / 30486)
+[15:39:40] INFO: AI request (iteration 5, msgs=115)
+[15:40:00] INFO: AI response: 93014 prompt + 2663 response tokens (total: 3609356 / 33149)
+[15:40:00] INFO: AI request (iteration 6, msgs=117)
+[15:40:25] INFO: AI response: 95565 prompt + 2504 response tokens (total: 3704921 / 35653)
+[15:40:25] INFO: AI request (iteration 7, msgs=119)
+[15:40:42] INFO: AI response: 98063 prompt + 1752 response tokens (total: 3802984 / 37405)
+[15:40:42] INFO: AI request (iteration 8, msgs=121)
+[15:41:04] INFO: AI response: 99808 prompt + 2318 response tokens (total: 3902792 / 39723)
+[15:41:04] INFO: AI request (iteration 9, msgs=123)
+[15:41:19] INFO: AI response: 102130 prompt + 1782 response tokens (total: 4004922 / 41505)
+[15:41:19] INFO: AI request (iteration 10, msgs=125)
+[15:41:31] INFO: AI response: 103912 prompt + 1617 response tokens (total: 4108834 / 43122)
+[15:41:31] Auto-continue: AI round 2/50 — task 1/34: Create docs/ROADMAP_V22.md documenting all planned v2.2.0 fe...
+[15:41:31] INFO: AI request (iteration 1, msgs=128)
+[15:41:35] INFO: AI response: 105648 prompt + 82 response tokens (total: 4214482 / 43204)
+[15:41:39] INFO: AI request (iteration 2, msgs=46)
+[15:41:50] INFO: AI response: 40844 prompt + 1936 response tokens (total: 4255326 / 45140)
+[15:41:50] INFO: AI request (iteration 3, msgs=48)
+[15:42:17] INFO: AI response: 42745 prompt + 2075 response tokens (total: 4298071 / 47215)
+[15:42:17] Auto-continue: AI round 3/50 — task 1/34: Create docs/ROADMAP_V22.md documenting all planned v2.2.0 fe...
+[15:42:17] INFO: AI request (iteration 1, msgs=50)
+[15:42:39] INFO: AI response: 42860 prompt + 2386 response tokens (total: 4340931 / 49601)
+[15:42:39] INFO: AI request (iteration 2, msgs=52)
+[15:42:58] INFO: AI response: 45037 prompt + 2276 response tokens (total: 4385968 / 51877)
+[15:42:58] INFO: AI request (iteration 3, msgs=54)
+[15:43:12] INFO: AI response: 47322 prompt + 1547 response tokens (total: 4433290 / 53424)
+[15:43:12] INFO: AI request (iteration 4, msgs=56)
+[15:43:25] INFO: AI response: 48876 prompt + 2221 response tokens (total: 4482166 / 55645)
+[15:43:25] INFO: AI request (iteration 5, msgs=58)
+[15:44:09] INFO: AI response: 50979 prompt + 5774 response tokens (total: 4533145 / 61419)
+[15:44:09] INFO: AI request (iteration 6, msgs=60)
+[15:44:25] INFO: AI response: 56733 prompt + 3024 response tokens (total: 4589878 / 64443)
+[15:44:25] INFO: AI request (iteration 7, msgs=62)
+[15:44:49] INFO: AI response: 59763 prompt + 3860 response tokens (total: 4649641 / 68303)
+[15:44:49] INFO: AI request (iteration 8, msgs=64)
+[15:44:51] INFO: AI response: 63629 prompt + 93 response tokens (total: 4713270 / 68396)
+[15:44:51] INFO: AI request (iteration 9, msgs=66)
+[15:45:31] INFO: AI response: 65785 prompt + 4674 response tokens (total: 4779055 / 73070)
+[15:45:31] INFO: AI request (iteration 10, msgs=68)
+[15:46:18] INFO: AI response: 70443 prompt + 5343 response tokens (total: 4849498 / 78413)
+[15:46:18] Auto-continue: AI round 4/50 — task 1/34: Create docs/ROADMAP_V22.md documenting all planned v2.2.0 fe...
+[15:46:18] INFO: AI request (iteration 1, msgs=71)
+[15:46:21] INFO: AI response: 75893 prompt + 88 response tokens (total: 4925391 / 78501)
+[15:46:21] INFO: AI request (iteration 2, msgs=73)
+[15:46:56] INFO: AI response: 78042 prompt + 4234 response tokens (total: 5003433 / 82735)
+[15:46:56] INFO: AI request (iteration 3, msgs=75)
+[15:47:16] INFO: AI response: 82106 prompt + 2500 response tokens (total: 5085539 / 85235)
+[15:47:16] Auto-continue: AI round 5/50 — task 1/34: Create docs/ROADMAP_V22.md documenting all planned v2.2.0 fe...
+[15:47:16] INFO: AI request (iteration 1, msgs=77)
+[15:47:51] INFO: AI response: 82221 prompt + 3210 response tokens (total: 5167760 / 88445)
+[15:47:51] INFO: AI request (iteration 2, msgs=79)
+[15:47:55] INFO: AI response: 85337 prompt + 233 response tokens (total: 5253097 / 88678)
+[15:47:55] INFO: AI request (iteration 3, msgs=81)
+[15:48:19] INFO: AI response: 89288 prompt + 3023 response tokens (total: 5342385 / 91701)
+[15:48:19] INFO: AI request (iteration 4, msgs=83)
+[15:48:22] INFO: AI response: 92308 prompt + 66 response tokens (total: 5434693 / 91767)
+[15:48:28] INFO: AI request (iteration 5, msgs=39)
+[15:48:37] INFO: AI response: 64832 prompt + 698 response tokens (total: 5499525 / 92465)
+[15:48:37] INFO: AI request (iteration 6, msgs=41)
+[15:49:04] INFO: AI response: 65514 prompt + 3494 response tokens (total: 5565039 / 95959)
+[15:49:04] INFO: AI request (iteration 7, msgs=43)
+[15:49:21] INFO: AI response: 68954 prompt + 2542 response tokens (total: 5633993 / 98501)
+[15:49:21] INFO: AI request (iteration 8, msgs=45)
+[15:49:31] INFO: Session started, sess_id=323, mode=build, model=kimi-k2.5:cloud
+[15:49:31] You: 
+[15:50:45] INFO: AI request (iteration 1, msgs=6)
+[15:50:57] INFO: AI response: 5911 prompt + 1861 response tokens (total: 140379 / 7897)
+[15:50:57] INFO: AI request (iteration 2, msgs=71)
+[15:51:51] INFO: AI response: 14042 prompt + 9717 response tokens (total: 154421 / 17614)
+[15:51:51] INFO: AI request (iteration 3, msgs=73)
+[15:51:57] INFO: AI response: 23742 prompt + 978 response tokens (total: 178163 / 18592)
+[15:51:57] INFO: AI request (iteration 4, msgs=76)
+[15:52:27] INFO: AI response: 24679 prompt + 6263 response tokens (total: 202842 / 24855)
+[15:52:27] INFO: AI request (iteration 5, msgs=78)
+[15:52:38] INFO: AI response: 30823 prompt + 1875 response tokens (total: 233665 / 26730)
+[15:52:38] INFO: AI request (iteration 6, msgs=80)
+[15:52:42] INFO: AI response: 32712 prompt + 510 response tokens (total: 266377 / 27240)
+[15:52:42] INFO: AI request (iteration 7, msgs=82)
+[15:52:47] INFO: AI response: 33231 prompt + 751 response tokens (total: 299608 / 27991)
+[15:52:47] You: 
+[15:55:59] You: 
+[15:56:18] INFO: AI request (iteration 1, msgs=84)
+[15:56:20] INFO: AI response: 33969 prompt + 140 response tokens (total: 333577 / 28131)
+[15:56:20] INFO: AI request (iteration 2, msgs=86)
+[15:56:22] INFO: AI response: 37003 prompt + 77 response tokens (total: 370580 / 28208)
+[15:56:22] ✓ ReadFile: Error: File `CHANGELOG.md` not found
+[15:56:22] INFO: AI request (iteration 3, msgs=88)
+[15:56:24] INFO: AI response: 37067 prompt + 61 response tokens (total: 407647 / 28269)
+[15:56:24] INFO: AI request (iteration 4, msgs=90)
+[15:56:30] INFO: AI response: 95047 prompt + 143 response tokens (total: 502694 / 28412)
+[15:56:30] INFO: AI request (iteration 5, msgs=92)
+[15:56:43] File>⚠ Model repeated itself — auto-cancelled
+[15:56:43] You: 
+[15:56:54] INFO: AI request (iteration 1, msgs=93)
+[15:57:08] INFO: AI response: 217101 prompt + 49 response tokens (total: 719795 / 28461)
+[15:57:13] INFO: AI request (iteration 2, msgs=17)
+[15:57:26] INFO: AI response: 20943 prompt + 1803 response tokens (total: 740738 / 30264)
+[15:57:26] INFO: AI request (iteration 3, msgs=19)
+[15:57:29] INFO: AI response: 22727 prompt + 75 response tokens (total: 763465 / 30339)
+[15:57:29] INFO: AI request (iteration 4, msgs=21)
+[15:57:49] INFO: AI response: 25743 prompt + 2167 response tokens (total: 789208 / 32506)
+[15:57:49] You: 
+[15:57:54] INFO: AI request (iteration 1, msgs=23)
+[15:57:57] INFO: AI response: 25754 prompt + 126 response tokens (total: 814962 / 32632)
+[15:57:57] INFO: AI request (iteration 2, msgs=25)
+[15:58:00] INFO: AI response: 62833 prompt + 48 response tokens (total: 877795 / 32680)
+[15:58:00] INFO: AI request (iteration 3, msgs=27)
+[15:58:19] INFO: AI response: 141373 prompt + 1906 response tokens (total: 1019168 / 34586)
+[15:58:19] You: 
+[15:58:25] INFO: AI request (iteration 1, msgs=29)
+[15:58:33] INFO: AI response: 141384 prompt + 49 response tokens (total: 1160552 / 34635)
+[15:58:37] INFO: AI request (iteration 2, msgs=23)
+[15:58:38] File>⚠ Model repeated itself — auto-cancelled
+[15:58:38] You: 
+[15:58:53] INFO: AI request (iteration 1, msgs=24)
+[15:58:55] INFO: AI response: 12191 prompt + 37 response tokens (total: 1172743 / 34672)
+[15:58:55] INFO: AI request (iteration 2, msgs=26)
+[15:58:57] File>⚠ Model repeated itself — auto-cancelled
+[15:58:57] You: 
+[15:59:08] INFO: AI request (iteration 1, msgs=27)
+[15:59:12] INFO: AI response: 35176 prompt + 454 response tokens (total: 1207919 / 35126)
+[15:59:12] You: 

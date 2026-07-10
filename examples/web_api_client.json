@@ -1,0 +1,98 @@
+{
+  "version": "2.2.0",
+  "x": 3,
+  "y": 2,
+  "w": 74,
+  "h": 21,
+  "title": "Web API Client",
+  "menu_count": 9,
+  "menu_items": [
+    {"caption": "Request", "name_id": "mnuRequest", "parent": 0, "has_submenu": true},
+    {"caption": "GET", "name_id": "mnuGet", "parent": 1, "has_submenu": false},
+    {"caption": "POST", "name_id": "mnuPost", "parent": 1, "has_submenu": false},
+    {"caption": "Clear", "name_id": "mnuClear", "parent": 1, "has_submenu": false},
+    {"caption": "Tools", "name_id": "mnuTools", "parent": 0, "has_submenu": true},
+    {"caption": "Format JSON", "name_id": "mnuFormat", "parent": 5, "has_submenu": false},
+    {"caption": "Validate URL", "name_id": "mnuValidate", "parent": 5, "has_submenu": false},
+    {"caption": "Presets", "name_id": "mnuPresets", "parent": 0, "has_submenu": true},
+    {"caption": "JSONPlaceholder", "name_id": "mnuJsonPlaceholder", "parent": 8, "has_submenu": false}
+  ],
+  "controls": [
+    {
+      "x": 2,
+      "y": 2,
+      "w": 70,
+      "h": 1,
+      "tool_type": 14,
+      "name_id": "txtUrl",
+      "caption": "https://jsonplaceholder.typicode.com/posts/1",
+      "code": "def on_change_txtUrl():\\n    pass\\n"
+    },
+    {
+      "x": 2,
+      "y": 4,
+      "w": 20,
+      "h": 1,
+      "tool_type": 3,
+      "name_id": "btnGet",
+      "caption": "GET",
+      "code": "def on_click_btnGet():\\n    execute_request('GET')\\n"
+    },
+    {
+      "x": 24,
+      "y": 4,
+      "w": 20,
+      "h": 1,
+      "tool_type": 3,
+      "name_id": "btnPost",
+      "caption": "POST",
+      "code": "def on_click_btnPost():\\n    execute_request('POST')\\n"
+    },
+    {
+      "x": 46,
+      "y": 4,
+      "w": 20,
+      "h": 1,
+      "tool_type": 3,
+      "name_id": "btnClear",
+      "caption": "Clear",
+      "code": "def on_click_btnClear():\\n    txtResponse.caption = ''\\n    lblStatus.set_panel_text(0, 'Cleared')\\n    lblStatus.set_panel_text(1, 'Ready')\\n"
+    },
+    {
+      "x": 2,
+      "y": 6,
+      "w": 70,
+      "h": 4,
+      "tool_type": 14,
+      "name_id": "txtBody",
+      "caption": "{\\n  \\\"title\\\": \\\"foo\\\",\\n  \\\"body\\\": \\\"bar\\\",\\n  \\\"userId\\\": 1\\n}",
+      "code": "def on_change_txtBody():\\n    pass\\n"
+    },
+    {
+      "x": 2,
+      "y": 11,
+      "w": 70,
+      "h": 6,
+      "tool_type": 14,
+      "name_id": "txtResponse",
+      "caption": "Response will appear here...",
+      "code": "def on_change_txtResponse():\\n    pass\\n"
+    },
+    {
+      "x": 2,
+      "y": 18,
+      "w": 70,
+      "h": 1,
+      "tool_type": 22,
+      "name_id": "lblStatus",
+      "caption": "",
+      "code": "",
+      "panels": [
+        {"text": "Ready", "width": 35, "auto_size": 1},
+        {"text": "Status: --", "width": 15, "auto_size": 0},
+        {"text": "Time: --ms", "width": 12, "auto_size": 0}
+      ]
+    }
+  ],
+  "code": "import time\\nnm = NetworkManager()\\n\\ndef on_load_frmMain():\\n    lblStatus.set_panel_text(0, 'Web API Client ready')\\n\\ndef execute_request(method):\\n    url = txtUrl.caption\\n    \\n    if not is_valid_url(url):\\n        msgbox('Invalid URL', 'Error')\\n        return\\n        \\n    lblStatus.set_panel_text(0, f'Executing {method}...')\\n    start_time = time.time()\\n    \\n    try:\\n        if method == 'GET':\\n            response = nm.get(url)\\n        elif method == 'POST':\\n            body = txtBody.caption\\n            try:\\n                data = json.loads(body)\\n                response = nm.post(url, data)\\n            except:\\n                response = nm.post(url, body)\\n        else:\\n            response = nm.get(url)\\n            \\n        elapsed = int((time.time() - start_time) * 1000)\\n        \\n        # Display response\\n        if response.is_success():\\n            if response.body:\\n                try:\\n                    # Try to pretty print JSON\\n                    parsed = json.loads(response.body)\\n                    txtResponse.caption = json.dumps(parsed, indent=2)\\n                except:\\n                    txtResponse.caption = response.body\\n            else:\\n                txtResponse.caption = '(Empty response)'\\n                \\n            lblStatus.set_panel_text(0, f'{method} successful')\\n            lblStatus.set_panel_text(1, f'Status: {response.status_code}')\\n            lblStatus.set_panel_text(2, f'Time: {elapsed}ms')\\n        else:\\n            txtResponse.caption = f'Error {response.status_code}:\\\\n{response.body}'\\n            lblStatus.set_panel_text(0, 'Request failed')\\n            lblStatus.set_panel_text(1, f'Status: {response.status_code}')\\n            \\n    except Exception as e:\\n        txtResponse.caption = f'Exception: {str(e)}'\\n        lblStatus.set_panel_text(0, 'Error')\\n        lblStatus.set_panel_text(1, 'Status: ERR')\\n\\ndef on_menu_mnuGet():\\n    execute_request('GET')\\n\\ndef on_menu_mnuPost():\\n    execute_request('POST')\\n\\ndef on_menu_mnuClear():\\n    txtResponse.caption = ''\\n    lblStatus.set_panel_text(0, 'Cleared')\\n    lblStatus.set_panel_text(1, 'Ready')\\n    lblStatus.set_panel_text(2, 'Time: --ms')\\n\\ndef on_menu_mnuFormat():\\n    try:\\n        text = txtResponse.caption\\n        if text:\\n            parsed = json.loads(text)\\n            txtResponse.caption = json.dumps(parsed, indent=2)\\n            lblStatus.set_panel_text(0, 'JSON formatted')\\n    except:\\n        msgbox('Invalid JSON in response', 'Format')\\n\\ndef on_menu_mnuValidate():\\n    url = txtUrl.caption\\n    if is_valid_url(url):\\n        msgbox(f'URL is valid:\\\\n{url}', 'Validate')\\n    else:\\n        msgbox(f'URL is invalid:\\\\n{url}', 'Validate')\\n\\ndef on_menu_mnuJsonPlaceholder():\\n    txtUrl.caption = 'https://jsonplaceholder.typicode.com/posts'\\n    lblStatus.set_panel_text(0, 'JSONPlaceholder preset loaded')\\n"
+}
