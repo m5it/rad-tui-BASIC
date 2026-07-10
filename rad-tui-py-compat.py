@@ -1,22 +1,109 @@
+#!/usr/bin/env python3
+"""
+VB1-DOS Clone: Terminal-Compatible Version
+Features:
+- ASCII fallback for terminals without UTF-8
+- Improved mouse handling for various terminals
+- Performance optimizations
+- Terminal capability detection
+"""
+
 import curses
 import time
 import re
 import copy
 import json
+import os
+import sys
 
 # ==========================================================
-# VB1-DOS Clone: Python curses IDE with Expanded Event System
+# Terminal Compatibility Layer
+# ==========================================================
+
+class TerminalCompat:
+    """Handle terminal differences"""
+    
+    def __init__(self):
+        self.has_utf8 = self._detect_utf8()
+        self.has_mouse = False
+        self.has_colors = False
+        self.term_name = os.environ.get('TERM', 'unknown')
+        
+    def _detect_utf8(self):
+        """Detect UTF-8 support"""
+        lang = os.environ.get('LANG', '') + os.environ.get('LC_ALL', '')
+        return 'utf' in lang.lower() or 'utf-8' in lang.lower()
+    
+    def setup(self, stdscr):
+        """Setup terminal capabilities"""
+        # Check colors
+        try:
+            curses.start_color()
+            self.has_colors = curses.has_colors() and curses.COLORS >= 8
+        except:
+            self.has_colors = False
+            
+        # Check mouse
+        try:
+            curses.mousemask(curses.ALL_MOUSE_EVENTS)
+            self.has_mouse = True
+        except:
+            self.has_mouse = False
+            
+        # Enable UTF-8 if available
+        try:
+            curses.meta(True)
+        except:
+            pass
+            
+        return self.has_colors
+    
+    def get_box_chars(self):
+        """Get box drawing characters based on terminal capability"""
+        if self.has_utf8:
+            return {
+                'h': '─', 'v': '│',
+                'tl': '┌', 'tr': '┐',
+                'bl': '└', 'br': '┘',
+                'tee_r': '├', 'tee_l': '┤',
+                'tee_d': '┬', 'tee_u': '┴',
+                'cross': '┼',
+                'block': '█', 'shade': '░',
+                'handle': '■', 'arrow': '→',
+                'check': '✓', 'bullet': '●'
+            }
+        else:
+            # ASCII fallback
+            return {
+                'h': '-', 'v': '|',
+                'tl': '+', 'tr': '+',
+                'bl': '+', 'br': '+',
+                'tee_r': '+', 'tee_l': '+',
+                'tee_d': '+', 'tee_u': '+',
+                'cross': '+',
+                'block': '#', 'shade': ':',
+                'handle': '#', 'arrow': '->',
+                'check': 'OK', 'bullet': '*'
+            }
+
+# Global compatibility instance
+TERM = TerminalCompat()
+
+# ==========================================================
+# Python Keywords for Syntax Highlighting
 # ==========================================================
 
 PYTHON_KEYWORDS = {
     "def", "class", "if", "elif", "else", "while", "for", "in", 
     "return", "pass", "import", "from", "and", "or", "not", 
     "True", "False", "None", "try", "except", "with", "as", 
-    "global", "nonlocal", "break", "continue", "print", "exec"
+    "global", "nonlocal", "break", "continue", "print", "exec",
+    "yield", "lambda", "assert", "del", "raise", "finally"
 }
 
 def tokenize_python(line):
-    pattern = re.compile(r'(\s+|\w+|"[^"]*"|#[^\n]*|.)')
+    """Tokenize Python code for syntax highlighting"""
+    pattern = re.compile(r'(\s+|\w+|"[^"]*"|\'[^\']*\'|#[^\n]*|.)')
     tokens = []
     for token in pattern.findall(line):
         if not token:
@@ -25,7 +112,7 @@ def tokenize_python(line):
             tokens.append((token, 'text'))
         elif token.startswith('#'):
             tokens.append((token, 'comment'))
-        elif token.startswith('"'):
+        elif token.startswith('"') or token.startswith("'"):
             tokens.append((token, 'string'))
         elif token in PYTHON_KEYWORDS:
             tokens.append((token, 'keyword'))
@@ -36,6 +123,10 @@ def tokenize_python(line):
         else:
             tokens.append((token, 'text'))
     return tokens
+
+# ==========================================================
+# Core Classes
+# ==========================================================
 
 class MenuItem:
     def __init__(self, caption="", name_id="", parent=0):
@@ -96,6 +187,7 @@ class Window:
         self.title = title
         self.controls = []
         self.menu_items = []
+        self._last_focused = -1  # For focus tracking
 
     def to_dict(self):
         return {
@@ -124,7 +216,7 @@ class Window:
             if parent > 0 and parent <= len(self.menu_items):
                 self.menu_items[parent - 1].has_submenu = True
 
-    def draw_menu_bar(self, stdscr, colors):
+    def draw_menu_bar(self, stdscr, colors, box_chars):
         C_BG = colors['bg']
         menu_text = ""
         for m in self.menu_items:
@@ -163,7 +255,7 @@ class Window:
                 ctrl.group = ""
             elif ctype == 13:
                 ctrl = UIControl(cx, cy, 15, 1, ctype, name_id, "Text1")
-            elif ctype == 14:  # Timer
+            elif ctype == 14:
                 ctrl = UIControl(cx, cy, 10, 1, ctype, name_id, "Timer")
             else:
                 ctrl = UIControl(cx, cy, 12, 1, ctype, name_id, ctitle)
@@ -199,31 +291,40 @@ class Toolbox:
             "Picture Box", "Text Box", "Timer", "VScrollBar"
         ]
 
-    def draw(self, stdscr, colors):
+    def draw(self, stdscr, colors, box_chars):
         C_TB = colors['textbox']
         C_ACTIVE = colors['active_tool']
 
-        write_at(stdscr, self.x, self.y, "┌" + "─" * (self.w - 2) + "┐", C_TB)
-        write_at(stdscr, self.x + (self.w // 2) - 3, self.y, "-Tools-", C_TB)
+        # Top border
+        top = box_chars['tl'] + box_chars['h'] * (self.w - 2) + box_chars['tr']
+        write_at(stdscr, self.x, self.y, top, C_TB)
+        
+        # Title
+        title = "-Tools-"
+        write_at(stdscr, self.x + (self.w // 2) - 3, self.y, title, C_TB)
         
         curr_y = self.y + 1
-        write_at(stdscr, self.x, curr_y, "│", C_TB)
+        # First item
         text = (self.items[0] + " " * (self.w - 2))[:self.w - 2]
-        write_at(stdscr, self.x + 1, curr_y, text, C_ACTIVE if self.active_tool == 0 else C_TB)
-        write_at(stdscr, self.x + self.w - 1, curr_y, "│", C_TB)
+        line = box_chars['v'] + text + box_chars['v']
+        write_at(stdscr, self.x, curr_y, line, C_ACTIVE if self.active_tool == 0 else C_TB)
         curr_y += 1
         
-        write_at(stdscr, self.x, curr_y, "├" + "─" * (self.w - 2) + "┤", C_TB)
+        # Separator
+        sep = box_chars['tee_r'] + box_chars['h'] * (self.w - 2) + box_chars['tee_l']
+        write_at(stdscr, self.x, curr_y, sep, C_TB)
         curr_y += 1
         
+        # Remaining items
         for i in range(1, 16):
-            write_at(stdscr, self.x, curr_y, "│", C_TB)
             text = (self.items[i] + " " * (self.w - 2))[:self.w - 2]
-            write_at(stdscr, self.x + 1, curr_y, text, C_ACTIVE if self.active_tool == i else C_TB)
-            write_at(stdscr, self.x + self.w - 1, curr_y, "│", C_TB)
+            line = box_chars['v'] + text + box_chars['v']
+            write_at(stdscr, self.x, curr_y, line, C_ACTIVE if self.active_tool == i else C_TB)
             curr_y += 1
             
-        write_at(stdscr, self.x, curr_y, "└" + "─" * (self.w - 2) + "┘", C_TB)
+        # Bottom border
+        bottom = box_chars['bl'] + box_chars['h'] * (self.w - 2) + box_chars['br']
+        write_at(stdscr, self.x, curr_y, bottom, C_TB)
 
     def process_click(self, mx, my):
         if self.x <= mx < self.x + self.w:
@@ -235,13 +336,20 @@ class Toolbox:
                 return True
         return False
 
+# ==========================================================
+# Drawing Functions
+# ==========================================================
+
 def write_at(stdscr, x, y, text, attr=0):
+    """Write text at position with error handling"""
     try:
-        stdscr.addstr(y, x, text, attr)
+        if y >= 0 and x >= 0:
+            stdscr.addstr(y, x, text, attr)
     except curses.error:
         pass
 
-def draw_properties(stdscr, prop_win, windows, selected_win_idx, selected_ctrl_idx, editing_prop, edit_buffer, colors, tools):
+def draw_properties(stdscr, prop_win, windows, selected_win_idx, selected_ctrl_idx, 
+                    editing_prop, edit_buffer, colors, tools):
     C_BG = colors['bg']
     C_TB = colors['textbox']
     C_LABEL = colors['prop_label']
@@ -254,7 +362,7 @@ def draw_properties(stdscr, prop_win, windows, selected_win_idx, selected_ctrl_i
         tool_name = tools.items[c.tool_type].strip()
         
         write_at(stdscr, prop_win.x + 2, prop_win.y + 2, f"Type: {tool_name}", C_LABEL)
-        write_at(stdscr, prop_win.x + 1, prop_win.y + 3, "─" * (prop_win.w - 2), C_BG)
+        write_at(stdscr, prop_win.x + 1, prop_win.y + 3, "-" * (prop_win.w - 2), C_BG)
 
         def draw_prop(ly, lbl, p_id, val_str):
             write_at(stdscr, prop_win.x + 2, prop_win.y + ly, lbl, C_LABEL)
@@ -275,7 +383,7 @@ def draw_properties(stdscr, prop_win, windows, selected_win_idx, selected_ctrl_i
     else:
         form_win = windows[0]
         write_at(stdscr, prop_win.x + 2, prop_win.y + 2, "Form Properties", C_LABEL)
-        write_at(stdscr, prop_win.x + 1, prop_win.y + 3, "─" * (prop_win.w - 2), C_BG)
+        write_at(stdscr, prop_win.x + 1, prop_win.y + 3, "-" * (prop_win.w - 2), C_BG)
         write_at(stdscr, prop_win.x + 2, prop_win.y + 5, f"Menu items: {len(form_win.menu_items)}", C_LABEL)
         write_at(stdscr, prop_win.x + 2, prop_win.y + 7, " Click here to edit menu ", curses.color_pair(1) | curses.A_BOLD)
 
@@ -283,10 +391,12 @@ def draw_code_editor(stdscr, lines, cy, cx, target_name, box_x, box_y, box_w, bo
     C_BORDER = colors['border']
     C_BG = colors['bg']
     
-    write_at(stdscr, box_x, box_y, "┌" + "─" * (box_w - 2) + "┐", C_BORDER)
+    # Top border
+    write_at(stdscr, box_x, box_y, "+" + "-" * (box_w - 2) + "+", C_BORDER)
+    
     for i in range(1, box_h - 1):
-        write_at(stdscr, box_x, box_y + i, "│", C_BORDER)
-        write_at(stdscr, box_x + box_w - 1, box_y + i, "│", C_BORDER)
+        write_at(stdscr, box_x, box_y + i, "|", C_BORDER)
+        write_at(stdscr, box_x + box_w - 1, box_y + i, "|", C_BORDER)
         
         line_idx = i - 1
         if line_idx < len(lines):
@@ -304,10 +414,11 @@ def draw_code_editor(stdscr, lines, cy, cx, target_name, box_x, box_y, box_w, bo
                 render_str = text_chunk[:space_left]
                 
                 attr = C_BG
-                if ttype == 'keyword': attr = colors['kw']
-                elif ttype == 'string': attr = colors['str']
-                elif ttype == 'number': attr = colors['num']
-                elif ttype == 'comment': attr = colors['comment']
+                if TERM.has_colors:
+                    if ttype == 'keyword': attr = colors['kw']
+                    elif ttype == 'string': attr = colors['str']
+                    elif ttype == 'number': attr = colors['num']
+                    elif ttype == 'comment': attr = colors['comment']
                 
                 write_at(stdscr, curr_x, box_y + i, render_str, attr)
                 curr_x += len(render_str)
@@ -318,7 +429,8 @@ def draw_code_editor(stdscr, lines, cy, cx, target_name, box_x, box_y, box_w, bo
         else:
             write_at(stdscr, box_x + 1, box_y + i, " " * (box_w - 2), C_BG)
             
-    write_at(stdscr, box_x, box_y + box_h - 1, "└" + "─" * (box_w - 2) + "┘", C_BORDER)
+    # Bottom border
+    write_at(stdscr, box_x, box_y + box_h - 1, "+" + "-" * (box_w - 2) + "+", C_BORDER)
     
     title = f" Code: {target_name} ({event_type}) "
     write_at(stdscr, box_x + (box_w - len(title))//2, box_y, title, C_BORDER)
@@ -338,15 +450,16 @@ def draw_msgbox(stdscr, msg, colors):
     lines = msg.split('\n')
     w = max([len(l) for l in lines] + [20]) + 4
     h = len(lines) + 4
-    x = (curses.COLS - w) // 2
-    y = (curses.LINES - h) // 2
+    x = max(0, (curses.COLS - w) // 2)
+    y = max(0, (curses.LINES - h) // 2)
     
-    write_at(stdscr, x, y, "┌" + "─" * (w - 2) + "┐", C_BORDER)
+    # Simple ASCII box
+    write_at(stdscr, x, y, "+" + "-" * (w - 2) + "+", C_BORDER)
     for i in range(1, h - 1):
-        write_at(stdscr, x, y + i, "│", C_BORDER)
+        write_at(stdscr, x, y + i, "|", C_BORDER)
         write_at(stdscr, x + 1, y + i, " " * (w - 2), C_BG)
-        write_at(stdscr, x + w - 1, y + i, "│", C_BORDER)
-    write_at(stdscr, x, y + h - 1, "└" + "─" * (w - 2) + "┘", C_BORDER)
+        write_at(stdscr, x + w - 1, y + i, "|", C_BORDER)
+    write_at(stdscr, x, y + h - 1, "+" + "-" * (w - 2) + "+", C_BORDER)
     
     for i, l in enumerate(lines):
         write_at(stdscr, x + 2, y + 2 + i, l, C_BG)
@@ -378,12 +491,12 @@ def handle_file_menu(stdscr, colors):
     x = 1
     y = 1
     
-    write_at(stdscr, x, y, "┌" + "─" * (w - 2) + "┐", C_BORDER)
+    write_at(stdscr, x, y, "+" + "-" * (w - 2) + "+", C_BORDER)
     for i, item in enumerate(menu_items):
-        write_at(stdscr, x, y + i + 1, "│", C_BORDER)
+        write_at(stdscr, x, y + i + 1, "|", C_BORDER)
         write_at(stdscr, x + 1, y + i + 1, item, C_BG)
-        write_at(stdscr, x + w - 1, y + i + 1, "│", C_BORDER)
-    write_at(stdscr, x, y + h - 1, "└" + "─" * (w - 2) + "┘", C_BORDER)
+        write_at(stdscr, x + w - 1, y + i + 1, "|", C_BORDER)
+    write_at(stdscr, x, y + h - 1, "+" + "-" * (w - 2) + "+", C_BORDER)
     stdscr.refresh()
     
     while True:
@@ -409,19 +522,19 @@ def prompt_input(stdscr, prompt_title, colors):
     C_BG = colors['bg']
     C_TB = colors['textbox']
     
-    box_w = 40
+    box_w = min(40, curses.COLS - 4)
     box_h = 5
-    box_x = (curses.COLS - box_w) // 2
-    box_y = (curses.LINES - box_h) // 2
+    box_x = max(0, (curses.COLS - box_w) // 2)
+    box_y = max(0, (curses.LINES - box_h) // 2)
     
     buffer = ""
     while True:
-        write_at(stdscr, box_x, box_y, "┌" + "─" * (box_w - 2) + "┐", C_BORDER)
+        write_at(stdscr, box_x, box_y, "+" + "-" * (box_w - 2) + "+", C_BORDER)
         for i in range(1, box_h - 1):
-            write_at(stdscr, box_x, box_y + i, "│", C_BORDER)
+            write_at(stdscr, box_x, box_y + i, "|", C_BORDER)
             write_at(stdscr, box_x + 1, box_y + i, " " * (box_w - 2), C_BG)
-            write_at(stdscr, box_x + box_w - 1, box_y + i, "│", C_BORDER)
-        write_at(stdscr, box_x, box_y + box_h - 1, "└" + "─" * (box_w - 2) + "┘", C_BORDER)
+            write_at(stdscr, box_x + box_w - 1, box_y + i, "|", C_BORDER)
+        write_at(stdscr, box_x, box_y + box_h - 1, "+" + "-" * (box_w - 2) + "+", C_BORDER)
         
         title = f" {prompt_title} "
         write_at(stdscr, box_x + (box_w - len(title))//2, box_y, title, C_BORDER)
@@ -445,28 +558,28 @@ def edit_menu_dialog(stdscr, form_win, colors):
     C_BG = colors['bg']
     C_ACTIVE = colors['active_tool']
     
-    box_w = 50
-    box_h = 15
-    box_x = (curses.COLS - box_w) // 2
-    box_y = (curses.LINES - box_h) // 2
+    box_w = min(50, curses.COLS - 4)
+    box_h = min(15, curses.LINES - 4)
+    box_x = max(0, (curses.COLS - box_w) // 2)
+    box_y = max(0, (curses.LINES - box_h) // 2)
     
     cursor = 0
     
     while True:
-        write_at(stdscr, box_x, box_y, "┌" + "─" * (box_w - 2) + "┐", C_BORDER)
+        write_at(stdscr, box_x, box_y, "+" + "-" * (box_w - 2) + "+", C_BORDER)
         for i in range(1, box_h - 1):
-            write_at(stdscr, box_x, box_y + i, "│" + " " * (box_w - 2) + "│", C_BG)
-        write_at(stdscr, box_x, box_y + box_h - 1, "└" + "─" * (box_w - 2) + "┘", C_BORDER)
+            write_at(stdscr, box_x, box_y + i, "|" + " " * (box_w - 2) + "|", C_BG)
+        write_at(stdscr, box_x, box_y + box_h - 1, "+" + "-" * (box_w - 2) + "+", C_BORDER)
         
         write_at(stdscr, box_x + 2, box_y, " Menu Editor ", C_BORDER)
         write_at(stdscr, box_x + 2, box_y + box_h - 1, " A=Add | D=Delete | ESC=Close ", C_BG)
         
         row = 1
         for i, m in enumerate(form_win.menu_items[:20]):
-            indent = "  → " if m.parent > 0 else ""
-            sel_mark = "▶ " if cursor == i else "  "
+            indent = "  -> " if m.parent > 0 else ""
+            sel_mark = "> " if cursor == i else "  "
             text = sel_mark + indent + m.caption
-            write_at(stdscr, box_x + 2, box_y + row, text.ljust(box_w - 6), 
+            write_at(stdscr, box_x + 2, box_y + row, text.ljust(box_w - 6)[:box_w-6], 
                     C_ACTIVE if cursor == i else C_BG)
             row += 1
             if row >= box_h - 2:
@@ -510,44 +623,50 @@ def edit_menu_dialog(stdscr, form_win, colors):
         
         time.sleep(0.01)
 
-def draw_window(stdscr, win, colors, active_ctrl=-1):
+def draw_window(stdscr, win, colors, box_chars, active_ctrl=-1):
     C_BORDER = colors['border']
     C_BG = colors['bg']
-    C_BTN_FACE = colors['btn_face']
-    C_BTN_HL = colors['btn_hl']
-    C_TEXTBOX = colors['textbox']
     C_HANDLE = colors['handle']
 
-    write_at(stdscr, win.x, win.y, "┌" + "─" * (win.w - 2) + "┐", C_BORDER)
+    # Top border
+    top = box_chars['tl'] + box_chars['h'] * (win.w - 2) + box_chars['tr']
+    write_at(stdscr, win.x, win.y, top, C_BORDER)
+    
+    # Title
     title_x = win.x + (win.w - len(win.title)) // 2
     write_at(stdscr, title_x, win.y, win.title, C_BORDER)
     
+    # Side borders
     for i in range(1, win.h - 1):
-        write_at(stdscr, win.x, win.y + i, "│", C_BORDER)
+        write_at(stdscr, win.x, win.y + i, box_chars['v'], C_BORDER)
         write_at(stdscr, win.x + 1, win.y + i, " " * (win.w - 2), C_BG)
-        write_at(stdscr, win.x + win.w - 1, win.y + i, "│", C_BORDER)
+        write_at(stdscr, win.x + win.w - 1, win.y + i, box_chars['v'], C_BORDER)
     
-    write_at(stdscr, win.x, win.y + win.h - 1, "└" + "─" * (win.w - 2) + "┘", C_BORDER)
+    # Bottom border
+    bottom = box_chars['bl'] + box_chars['h'] * (win.w - 2) + box_chars['br']
+    write_at(stdscr, win.x, win.y + win.h - 1, bottom, C_BORDER)
 
     if win.menu_items:
-        win.draw_menu_bar(stdscr, colors)
+        win.draw_menu_bar(stdscr, colors, box_chars)
 
+    # Draw controls - frames first, then others
     for i, c in enumerate(win.controls):
         if c.tool_type == 7:
-            draw_control(stdscr, win, c, i == active_ctrl, colors)
+            draw_control(stdscr, win, c, i == active_ctrl, colors, box_chars)
     
     for i, c in enumerate(win.controls):
         if c.tool_type != 7:
-            draw_control(stdscr, win, c, i == active_ctrl, colors)
+            draw_control(stdscr, win, c, i == active_ctrl, colors, box_chars)
 
+    # Draw resize handle
     if active_ctrl >= 0 and active_ctrl < len(win.controls):
         c = win.controls[active_ctrl]
         hx = win.x + c.x + c.w
         hy = win.y + c.y + c.h
         if hx < win.x + win.w and hy < win.y + win.h:
-            write_at(stdscr, hx, hy, "■", C_HANDLE)
+            write_at(stdscr, hx, hy, box_chars['handle'], C_HANDLE)
 
-def draw_control(stdscr, win, c, is_active, colors):
+def draw_control(stdscr, win, c, is_active, colors, box_chars):
     C_BORDER = colors['border']
     C_BG = colors['bg']
     C_BTN_FACE = colors['btn_face']
@@ -557,6 +676,7 @@ def draw_control(stdscr, win, c, is_active, colors):
     draw_x = win.x + c.x
     draw_y = win.y + c.y
     
+    # Adjust for parent frame
     if c.parent > 0 and c.parent <= len(win.controls):
         parent = win.controls[c.parent - 1]
         if c.x < parent.x + 1:
@@ -564,57 +684,70 @@ def draw_control(stdscr, win, c, is_active, colors):
         if c.y < parent.y + 1:
             draw_y = win.y + parent.y + 1
     
-    if c.tool_type == 1:
+    if c.tool_type == 1:  # Check Box
         check_state = "[X]" if c.checked else "[ ]"
         label = c.caption[3:] if c.caption.startswith('[ ]') or c.caption.startswith('[X]') else c.caption
         write_at(stdscr, draw_x, draw_y, f"{check_state}{label}", C_BG)
         
-    elif c.tool_type == 2:
+    elif c.tool_type == 2:  # Combo Box
         display_text = c.caption
         if c.selected_index >= 0 and c.selected_index < len(c.items):
             display_text = c.items[c.selected_index]
         if len(display_text) > c.w - 4:
             display_text = display_text[:c.w - 4]
-        write_at(stdscr, draw_x, draw_y, " " + display_text.ljust(c.w - 4) + " ▼", C_BG)
+        write_at(stdscr, draw_x, draw_y, " " + display_text.ljust(c.w - 4) + " [v]", C_BG)
         
-    elif c.tool_type == 3:
+    elif c.tool_type == 3:  # Command Button
         actual_h = max(3, c.h)
-        write_at(stdscr, draw_x, draw_y, "┌" + "─" * (c.w - 2) + "┐", C_BTN_HL)
+        top = box_chars['tl'] + box_chars['h'] * (c.w - 2) + box_chars['tr']
+        write_at(stdscr, draw_x, draw_y, top, C_BTN_HL)
         for r in range(1, actual_h - 1):
             if r == actual_h // 2:
                 btn_text = c.caption.center(c.w - 2)
-                write_at(stdscr, draw_x, draw_y + r, "│" + btn_text + "│", C_BTN_FACE)
+                line = box_chars['v'] + btn_text + box_chars['v']
+                write_at(stdscr, draw_x, draw_y + r, line, C_BTN_FACE)
             else:
-                write_at(stdscr, draw_x, draw_y + r, "│" + " " * (c.w - 2) + "│", C_BTN_FACE)
-        write_at(stdscr, draw_x, draw_y + actual_h - 1, "└" + "─" * (c.w - 2) + "┘", C_BTN_FACE)
+                line = box_chars['v'] + " " * (c.w - 2) + box_chars['v']
+                write_at(stdscr, draw_x, draw_y + r, line, C_BTN_FACE)
+        bottom = box_chars['bl'] + box_chars['h'] * (c.w - 2) + box_chars['br']
+        write_at(stdscr, draw_x, draw_y + actual_h - 1, bottom, C_BTN_FACE)
         
-    elif c.tool_type == 7:
-        write_at(stdscr, draw_x, draw_y, "┌" + "─" * (c.w - 2) + "┐", C_BORDER)
+    elif c.tool_type == 7:  # Frame
+        top = box_chars['tl'] + box_chars['h'] * (c.w - 2) + box_chars['tr']
+        write_at(stdscr, draw_x, draw_y, top, C_BORDER)
         for r in range(1, c.h - 1):
-            write_at(stdscr, draw_x, draw_y + r, "│" + " " * (c.w - 2) + "│", C_BG)
-        write_at(stdscr, draw_x, draw_y + c.h - 1, "└" + "─" * (c.w - 2) + "┘", C_BORDER)
+            line = box_chars['v'] + " " * (c.w - 2) + box_chars['v']
+            write_at(stdscr, draw_x, draw_y + r, line, C_BG)
+        bottom = box_chars['bl'] + box_chars['h'] * (c.w - 2) + box_chars['br']
+        write_at(stdscr, draw_x, draw_y + c.h - 1, bottom, C_BORDER)
         if c.caption:
             write_at(stdscr, draw_x + 2, draw_y, f" {c.caption} ", C_BORDER)
             
-    elif c.tool_type == 10:
-        write_at(stdscr, draw_x, draw_y, "┌" + "─" * (c.w - 3) + "┬┐", C_BG)
+    elif c.tool_type == 10:  # List Box
+        top = box_chars['tl'] + box_chars['h'] * (c.w - 3) + box_chars['tee_d'] + box_chars['tr']
+        write_at(stdscr, draw_x, draw_y, top, C_BG)
         visible_rows = c.h - 2
         for r in range(visible_rows):
             item_idx = c.scroll_offset + r
-            write_at(stdscr, draw_x, draw_y + 1 + r, "│", C_BG)
+            line = box_chars['v']
             if item_idx < len(c.items):
                 item_text = c.items[item_idx]
                 if len(item_text) > c.w - 4:
                     item_text = item_text[:c.w - 4]
-                if item_idx == c.selected_index:
+                if item_idx == c.selected_index and TERM.has_colors:
                     attr = curses.color_pair(3) | curses.A_BOLD
                 else:
                     attr = C_BG
-                write_at(stdscr, draw_x + 2, draw_y + 1 + r, item_text.ljust(c.w - 4), attr)
+                line += " " + item_text.ljust(c.w - 4)[:c.w-4]
             else:
-                write_at(stdscr, draw_x + 2, draw_y + 1 + r, " " * (c.w - 4), C_BG)
-            write_at(stdscr, draw_x + c.w - 2, draw_y + 1 + r, "││", C_BG)
-        write_at(stdscr, draw_x, draw_y + c.h - 1, "└" + "─" * (c.w - 3) + "┴┘", C_BG)
+                line += " " * (c.w - 3)
+            line += box_chars['v'] + box_chars['v']
+            write_at(stdscr, draw_x, draw_y + 1 + r, line, attr if item_idx == c.selected_index and TERM.has_colors else C_BG)
+        
+        bottom = box_chars['bl'] + box_chars['h'] * (c.w - 3) + box_chars['tee_u'] + box_chars['br']
+        write_at(stdscr, draw_x, draw_y + c.h - 1, bottom, C_BG)
+        
+        # Scrollbar
         if len(c.items) > visible_rows:
             sb_height = visible_rows
             thumb_size = max(1, (visible_rows * sb_height) // len(c.items))
@@ -623,15 +756,15 @@ def draw_control(stdscr, win, c, is_active, colors):
             else:
                 thumb_pos = 0
             for r in range(sb_height):
-                write_at(stdscr, draw_x + c.w - 1, draw_y + 1 + r, 
-                        "█" if r >= thumb_pos and r < thumb_pos + thumb_size else "░", C_BG)
+                ch = box_chars['block'] if r >= thumb_pos and r < thumb_pos + thumb_size else box_chars['shade']
+                write_at(stdscr, draw_x + c.w - 1, draw_y + 1 + r, ch, C_BG)
                 
-    elif c.tool_type == 11:
+    elif c.tool_type == 11:  # Option Button
         opt_state = "(*)" if c.checked else "( )"
         label = c.caption[3:] if c.caption.startswith('( )') or c.caption.startswith('(*)') else c.caption
         write_at(stdscr, draw_x, draw_y, f"{opt_state}{label}", C_BG)
         
-    elif c.tool_type == 13:
+    elif c.tool_type == 13:  # Text Box
         for r in range(c.h):
             if r == 0:
                 display_text = c.caption
@@ -649,39 +782,73 @@ def draw_control(stdscr, win, c, is_active, colors):
             else:
                 write_at(stdscr, draw_x, draw_y + r, " " * c.w, C_TEXTBOX)
 
+# ==========================================================
+# Main Application
+# ==========================================================
+
 def main(stdscr):
+    # Initialize terminal compatibility
+    TERM.setup(stdscr)
+    box_chars = TERM.get_box_chars()
+    
     curses.curs_set(0)
     stdscr.nodelay(True)
-    curses.mousemask(curses.ALL_MOUSE_EVENTS | curses.REPORT_MOUSE_POSITION)
-    curses.mouseinterval(0) 
-    print('\033[?1003h\033[?1015h\033[?1006h', end='', flush=True) 
+    
+    # Setup mouse with error handling
+    try:
+        curses.mousemask(curses.ALL_MOUSE_EVENTS | curses.REPORT_MOUSE_POSITION)
+        curses.mouseinterval(0)
+        # Enable extended mouse mode
+        print('\033[?1003h\033[?1015h\033[?1006h', end='', flush=True)
+        TERM.has_mouse = True
+    except Exception as e:
+        TERM.has_mouse = False
+        print(f"Mouse setup warning: {e}", file=sys.stderr)
 
-    curses.init_pair(1, curses.COLOR_WHITE, curses.COLOR_BLUE)    
-    curses.init_pair(2, curses.COLOR_BLACK, curses.COLOR_WHITE)   
-    curses.init_pair(3, curses.COLOR_WHITE, curses.COLOR_WHITE)   
-    curses.init_pair(4, curses.COLOR_BLACK, curses.COLOR_CYAN)    
-    curses.init_pair(5, curses.COLOR_WHITE, curses.COLOR_BLACK)   
-    curses.init_pair(6, curses.COLOR_CYAN, curses.COLOR_BLACK)    
-    curses.init_pair(7, curses.COLOR_BLACK, curses.COLOR_WHITE)   
-    curses.init_pair(8, curses.COLOR_BLUE, curses.COLOR_WHITE)    
-    curses.init_pair(9, curses.COLOR_GREEN, curses.COLOR_WHITE)   
-    curses.init_pair(10, curses.COLOR_RED, curses.COLOR_WHITE)    
-    curses.init_pair(11, curses.COLOR_MAGENTA, curses.COLOR_WHITE)
+    # Initialize colors if available
+    if TERM.has_colors:
+        curses.init_pair(1, curses.COLOR_WHITE, curses.COLOR_BLUE)    
+        curses.init_pair(2, curses.COLOR_BLACK, curses.COLOR_WHITE)   
+        curses.init_pair(3, curses.COLOR_WHITE, curses.COLOR_WHITE)   
+        curses.init_pair(4, curses.COLOR_BLACK, curses.COLOR_CYAN)    
+        curses.init_pair(5, curses.COLOR_WHITE, curses.COLOR_BLACK)   
+        curses.init_pair(6, curses.COLOR_CYAN, curses.COLOR_BLACK)    
+        curses.init_pair(7, curses.COLOR_BLACK, curses.COLOR_WHITE)   
+        curses.init_pair(8, curses.COLOR_BLUE, curses.COLOR_WHITE)    
+        curses.init_pair(9, curses.COLOR_GREEN, curses.COLOR_WHITE)   
+        curses.init_pair(10, curses.COLOR_RED, curses.COLOR_WHITE)    
+        curses.init_pair(11, curses.COLOR_MAGENTA, curses.COLOR_WHITE)
 
-    C = {
-        'border': curses.color_pair(1) | curses.A_BOLD,
-        'bg': curses.color_pair(2),
-        'btn_face': curses.color_pair(2),
-        'btn_hl': curses.color_pair(3) | curses.A_BOLD,
-        'textbox': curses.color_pair(4),
-        'handle': curses.color_pair(5),
-        'active_tool': curses.color_pair(6) | curses.A_BOLD,
-        'prop_label': curses.color_pair(7),
-        'kw': curses.color_pair(8) | curses.A_BOLD,
-        'str': curses.color_pair(9),
-        'comment': curses.color_pair(10),
-        'num': curses.color_pair(11)
-    }
+        C = {
+            'border': curses.color_pair(1) | curses.A_BOLD,
+            'bg': curses.color_pair(2),
+            'btn_face': curses.color_pair(2),
+            'btn_hl': curses.color_pair(3) | curses.A_BOLD,
+            'textbox': curses.color_pair(4),
+            'handle': curses.color_pair(5),
+            'active_tool': curses.color_pair(6) | curses.A_BOLD,
+            'prop_label': curses.color_pair(7),
+            'kw': curses.color_pair(8) | curses.A_BOLD,
+            'str': curses.color_pair(9),
+            'comment': curses.color_pair(10),
+            'num': curses.color_pair(11)
+        }
+    else:
+        # Monochrome fallback
+        C = {
+            'border': curses.A_BOLD,
+            'bg': 0,
+            'btn_face': 0,
+            'btn_hl': curses.A_BOLD,
+            'textbox': curses.A_REVERSE,
+            'handle': curses.A_BOLD,
+            'active_tool': curses.A_BOLD,
+            'prop_label': 0,
+            'kw': curses.A_BOLD,
+            'str': 0,
+            'comment': curses.A_DIM,
+            'num': 0
+        }
 
     tools = Toolbox(1, 2)
     windows = [
@@ -746,57 +913,72 @@ def main(stdscr):
 
     stdscr.clear()
 
+    # Main loop with frame rate limiting
+    last_draw = 0
+    frame_delay = 1/30  # 30 FPS max
+    
     while True:
+        current_time = time.time()
+        
+        # Calculate dialog dimensions
         box_w = max(50, curses.COLS - 10)
         box_h = max(15, curses.LINES - 6)
         box_x = (curses.COLS - box_w) // 2
         box_y = (curses.LINES - box_h) // 2
 
-        if code_mode:
-            draw_code_editor(stdscr, code_lines, code_cy, code_cx, code_target_ctrl.name_id, box_x, box_y, box_w, box_h, C, code_event_type)
-            curses.curs_set(1) 
-        else:
-            if run_mode and run_focused_ctrl >= 0:
-                curses.curs_set(1)
+        # Draw only when needed or at frame rate
+        if current_time - last_draw >= frame_delay or code_mode:
+            if code_mode:
+                draw_code_editor(stdscr, code_lines, code_cy, code_cx, 
+                               code_target_ctrl.name_id, box_x, box_y, 
+                               box_w, box_h, C, code_event_type)
+                curses.curs_set(1) 
             else:
-                curses.curs_set(0) 
-            
-            if run_mode:
-                menu_str = " File  Edit  View [STOP] Debug  Options"
-            else:
-                menu_str = " File  Edit  View [RUN ] Debug  Options"
+                if run_mode and run_focused_ctrl >= 0:
+                    curses.curs_set(1)
+                else:
+                    curses.curs_set(0) 
                 
-            write_at(stdscr, 0, 0, menu_str + " " * max(0, curses.COLS - len(menu_str)), C['handle'])
-            
-            if not run_mode:
-                tools.draw(stdscr, C)
-            
-            for i, win in enumerate(windows):
-                if run_mode and i != 0:
-                    continue
-                act_idx = selected_ctrl_idx if (i == selected_win_idx and not run_mode) else -1
-                draw_window(stdscr, win, C, act_idx)
-                if i == 1 and not run_mode:
-                    draw_properties(stdscr, win, windows, selected_win_idx, selected_ctrl_idx, editing_prop, edit_buffer, C, tools)
+                # Menu bar
+                if run_mode:
+                    menu_str = " File  Edit  View [STOP] Debug  Options"
+                else:
+                    menu_str = " File  Edit  View [RUN ] Debug  Options"
+                    
+                write_at(stdscr, 0, 0, menu_str + " " * max(0, curses.COLS - len(menu_str)), C['handle'])
+                
+                if not run_mode:
+                    tools.draw(stdscr, C, box_chars)
+                
+                for i, win in enumerate(windows):
+                    if run_mode and i != 0:
+                        continue
+                    act_idx = selected_ctrl_idx if (i == selected_win_idx and not run_mode) else -1
+                    draw_window(stdscr, win, C, box_chars, act_idx)
+                    if i == 1 and not run_mode:
+                        draw_properties(stdscr, win, windows, selected_win_idx, 
+                                     selected_ctrl_idx, editing_prop, edit_buffer, C, tools)
 
-            if run_mode and run_globals.get('__msg__'):
-                draw_msgbox(stdscr, run_globals['__msg__'], C)
+                if run_mode and run_globals.get('__msg__'):
+                    draw_msgbox(stdscr, run_globals['__msg__'], C)
 
-            if run_mode and run_focused_ctrl >= 0:
-                c = windows[0].controls[run_focused_ctrl]
-                display_text = c.caption
-                if len(display_text) >= c.w:
-                    display_text = display_text[-(c.w-1):]
-                try:
-                    stdscr.move(windows[0].y + c.y, windows[0].x + c.x + len(display_text))
-                except curses.error:
-                    pass
+                if run_mode and run_focused_ctrl >= 0:
+                    c = windows[0].controls[run_focused_ctrl]
+                    display_text = c.caption
+                    if len(display_text) >= c.w:
+                        display_text = display_text[-(c.w-1):]
+                    try:
+                        stdscr.move(windows[0].y + c.y, windows[0].x + c.x + len(display_text))
+                    except curses.error:
+                        pass
 
-        stdscr.refresh()
+            stdscr.refresh()
+            last_draw = current_time
 
+        # Input handling
         ch = stdscr.getch()
         
-        if ch == curses.KEY_MOUSE:
+        if ch == curses.KEY_MOUSE and TERM.has_mouse:
             try:
                 _, mx, my, _, bstate = curses.getmouse()
                 mouse_moved = (mx != old_mx or my != old_my)
@@ -854,58 +1036,51 @@ def main(stdscr):
                                         c = win.controls[idx]
                                         
                                         # Track focus changes
-                                        if not hasattr(win, '_last_focused'):
-                                            win._last_focused = -1
-                                        
                                         if idx != win._last_focused:
-                                            # on_blur for previous
                                             if win._last_focused >= 0:
                                                 last_c = win.controls[win._last_focused]
                                                 execute_event(f"on_blur_{last_c.name_id}", win)
-                                            # on_focus for new
                                             execute_event(f"on_focus_{c.name_id}", win)
                                             win._last_focused = idx
                                         
-                                        if c.tool_type == 1:  # Check Box
+                                        if c.tool_type == 1:
                                             c.checked = not c.checked
                                             execute_event(f"on_change_{c.name_id}", win)
                                             win.redraw()
-                                        elif c.tool_type == 2:  # Combo Box
+                                        elif c.tool_type == 2:
                                             c.selected_index += 1
                                             if c.selected_index >= len(c.items):
                                                 c.selected_index = 0
                                             execute_event(f"on_change_{c.name_id}", win)
                                             win.redraw()
-                                        elif c.tool_type == 3:  # Command Button
+                                        elif c.tool_type == 3:
                                             execute_event(f"on_click_{c.name_id}", win)
                                             win.redraw()
-                                        elif c.tool_type == 10:  # List Box
+                                        elif c.tool_type == 10:
                                             rel_y = ly - c.y - 1
                                             item_idx = c.scroll_offset + rel_y
                                             if 0 <= item_idx < len(c.items):
                                                 c.selected_index = item_idx
                                                 execute_event(f"on_change_{c.name_id}", win)
                                             win.redraw()
-                                        elif c.tool_type == 11:  # Option Button
+                                        elif c.tool_type == 11:
                                             c.checked = True
                                             for other in win.controls:
                                                 if other.tool_type == 11 and other != c and other.group == c.group:
                                                     other.checked = False
                                             execute_event(f"on_change_{c.name_id}", win)
                                             win.redraw()
-                                        elif c.tool_type == 13:  # Text Box
+                                        elif c.tool_type == 13:
                                             run_focused_ctrl = idx
                                             execute_event(f"on_focus_{c.name_id}", win)
-                                        elif c.tool_type == 14:  # Timer
-                                            pass
                                     else:
-                                        # Clicked outside - blur previous
-                                        if hasattr(win, '_last_focused') and win._last_focused >= 0:
+                                        if win._last_focused >= 0:
                                             last_c = win.controls[win._last_focused]
                                             execute_event(f"on_blur_{last_c.name_id}", win)
                                             win._last_focused = -1
                         
                         else:
+                            # Design mode mouse handling
                             clicked_handled = False
                             prop_win = windows[1]
                             prop_local_y = my - prop_win.y
@@ -964,7 +1139,6 @@ def main(stdscr):
                                 for w in windows:
                                     for c in w.controls:
                                         run_globals[c.name_id] = c
-                                # Fire on_load event
                                 execute_event("on_load_form", windows[0])
                                 for w in windows:
                                     for c in w.controls:
@@ -1171,13 +1345,12 @@ def main(stdscr):
             elif run_mode:
                 if run_focused_ctrl >= 0:
                     c = windows[0].controls[run_focused_ctrl]
-                    if c.tool_type == 13:  # Text Box
+                    if c.tool_type == 13:
                         old_caption = c.caption
                         if ch in (8, 127, curses.KEY_BACKSPACE):
                             c.caption = c.caption[:-1]
                         elif 32 <= ch <= 126:
                             c.caption += chr(ch)
-                        # Fire on_change if text changed
                         if c.caption != old_caption:
                             execute_event(f"on_change_{c.name_id}", windows[0])
             else:
@@ -1193,7 +1366,21 @@ def main(stdscr):
                         else:
                             edit_buffer += chr(ch)
 
-        time.sleep(0.01)
+        # Frame rate limiting
+        elapsed = time.time() - current_time
+        if elapsed < frame_delay:
+            time.sleep(frame_delay - elapsed)
+
+    # Cleanup
+    if TERM.has_mouse:
+        print('\033[?1003l', end='', flush=True)
 
 if __name__ == "__main__":
-    curses.wrapper(main)
+    try:
+        curses.wrapper(main)
+    except KeyboardInterrupt:
+        print("\nExiting...")
+    except Exception as e:
+        print(f"\nError: {e}")
+        import traceback
+        traceback.print_exc()

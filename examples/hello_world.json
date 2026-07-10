@@ -1,0 +1,82 @@
+{
+  "x": 21,
+  "y": 4,
+  "w": 36,
+  "h": 17,
+  "title": "Hello World",
+  "menu_count": 1,
+  "menu_items": [
+    {
+      "caption": "File",
+      "name_id": "mnuFile",
+      "parent": 0,
+      "has_submenu": false
+    }
+  ],
+  "controls": [
+    {
+      "x": 8,
+      "y": 3,
+      "w": 20,
+      "h": 1,
+      "tool_type": 9,
+      "name_id": "lblTitle",
+      "caption": "Welcome to VB1-DOS!",
+      "code": "",
+      "checked": false,
+      "group": "",
+      "parent": 0,
+      "items": [],
+      "selected_index": -1,
+      "scroll_offset": 0
+    },
+    {
+      "x": 5,
+      "y": 6,
+      "w": 26,
+      "h": 3,
+      "tool_type": 3,
+      "name_id": "btnClickMe",
+      "caption": "Click Me!",
+      "code": "def on_click_btnClickMe():\n    msgbox(\"Hello, World!\")\n    lblMessage.caption = \"You clicked the button!\"\n",
+      "checked": false,
+      "group": "",
+      "parent": 0,
+      "items": [],
+      "selected_index": -1,
+      "scroll_offset": 0
+    },
+    {
+      "x": 5,
+      "y": 10,
+      "w": 26,
+      "h": 1,
+      "tool_type": 9,
+      "name_id": "lblMessage",
+      "caption": "Click the button above",
+      "code": "",
+      "checked": false,
+      "group": "",
+      "parent": 0,
+      "items": [],
+      "selected_index": -1,
+      "scroll_offset": 0
+    },
+    {
+      "x": 12,
+      "y": 13,
+      "w": 12,
+      "h": 3,
+      "tool_type": 3,
+      "name_id": "btnExit",
+      "caption": "Exit",
+      "code": "def on_click_btnExit():\n    msgbox(\"Goodbye!\")\n",
+      "checked": false,
+      "group": "",
+      "parent": 0,
+      "items": [],
+      "selected_index": -1,
+      "scroll_offset": 0
+    }
+  ]
+}

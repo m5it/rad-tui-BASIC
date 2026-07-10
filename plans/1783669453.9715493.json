@@ -1,0 +1,123 @@
+{
+  "id": "1783669453.9715493",
+  "title": "RAD-TUI: VB1 for MS-DOS on Linux - Update & Porting Plan",
+  "instructions": "Modernize and enhance the RAD-TUI visual IDE to bring more VB1-for-MS-DOS functionality to Linux. Focus on feature parity, cross-compatibility between Python and FreeBASIC implementations, and adding missing classic VB features.",
+  "startTimestamp": 1783669453.9715526,
+  "endTimestamp": 1783671746.8004775,
+  "tasks": {
+    "1783669453.971711": {
+      "id": "1783669453.971711",
+      "status": "completed",
+      "instruction": "Compare Python (rad-tui-py.py) and FreeBASIC (rad-tui-BASIC.bas) implementations. Document:\n- Features present in Python but missing in FreeBASIC (save/load, code editor, runtime)\n- Features missing from both vs original VB1 for MS-DOS\n- Code architecture differences\n- Create a feature parity matrix",
+      "startTimestamp": 1783669453.974423,
+      "endTimestamp": 1783669523.04896,
+      "log": [
+        {
+          "timestamp": 1783669453.9745011,
+          "text": "Build started"
+        }
+      ]
+    },
+    "1783669453.9718366": {
+      "id": "1783669453.9718366",
+      "status": "completed",
+      "instruction": "Create an enhanced JSON project format that supports:\n- Multiple forms/windows per project\n- Menu definitions\n- Event handlers beyond on_click (on_change, on_focus, on_blur, on_timer)\n- Control-specific properties (min/max for scrollbars, items for list boxes)\n- Version field for backward compatibility\nDocument the schema",
+      "startTimestamp": 1783669468.919238,
+      "endTimestamp": 1783669627.797649,
+      "log": [
+        {
+          "timestamp": 1783669468.9193876,
+          "text": "Build started"
+        }
+      ]
+    },
+    "1783669453.973003": {
+      "id": "1783669453.973003",
+      "status": "completed",
+      "instruction": "Add Save Project and Load Project functionality to rad-tui-BASIC.bas:\n- JSON serialization/deserialization\n- File dialog using input prompts\n- Error handling for file I/O\n- Ensure compatibility with Python-generated JSON files",
+      "startTimestamp": 1783669523.0489633,
+      "endTimestamp": 1783669766.648046,
+      "log": []
+    },
+    "1783669453.973197": {
+      "id": "1783669453.973197",
+      "status": "completed",
+      "instruction": "Implement code-behind editor in FreeBASIC:\n- Modal text editor for writing event handlers\n- Store code in control data structure\n- Basic FreeBASIC syntax highlighting (optional)\n- Integration with double-click on buttons",
+      "startTimestamp": 1783669627.797651,
+      "endTimestamp": 1783670075.9464018,
+      "log": []
+    },
+    "1783669453.9733784": {
+      "id": "1783669453.9733784",
+      "status": "completed",
+      "instruction": "Add RUN mode to FreeBASIC implementation:\n- Execute FreeBASIC code snippets (or interpret simple logic)\n- Event dispatch system (on_click handlers)\n- msgbox function implementation\n- Control property access at runtime\n- Return to design mode capability",
+      "startTimestamp": 1783669766.6480477,
+      "endTimestamp": 1783670346.016676,
+      "log": []
+    },
+    "1783669453.9735265": {
+      "id": "1783669453.9735265",
+      "status": "completed",
+      "instruction": "Implement Check Box (type 1) and Option Button (type 11):\n- Visual rendering in both Python and FreeBASIC\n- Property editing (checked state for checkboxes, group for option buttons)\n- Runtime behavior\n- Update tool palette activation",
+      "startTimestamp": 1783670075.9464028,
+      "endTimestamp": 1783670635.806437,
+      "log": []
+    },
+    "1783669453.9736233": {
+      "id": "1783669453.9736233",
+      "status": "completed",
+      "instruction": "Implement Frame (type 7) container control:\n- Border rendering with optional caption\n- Child control containment (clip to frame bounds)\n- Visual grouping in property editor\n- Z-order handling",
+      "startTimestamp": 1783670346.0166771,
+      "endTimestamp": 1783670888.4074645,
+      "log": []
+    },
+    "1783669453.9737234": {
+      "id": "1783669453.9737234",
+      "status": "completed",
+      "instruction": "Implement List Box (type 10) and Combo Box (type 2):\n- Items collection property\n- Scrollbar integration\n- Selection handling\n- Runtime item manipulation",
+      "startTimestamp": 1783670635.8064382,
+      "endTimestamp": 1783671108.6745794,
+      "log": []
+    },
+    "1783669453.9738245": {
+      "id": "1783669453.9738245",
+      "status": "completed",
+      "instruction": "Add menu bar designer functionality:\n- Menu editor modal/dialog\n- Menu items with captions and names\n- Nested submenus\n- Runtime menu display and event handling\n- Save/load menu structure in project file",
+      "startTimestamp": 1783670888.4074655,
+      "endTimestamp": 1783671302.7065856,
+      "log": []
+    },
+    "1783669453.9739432": {
+      "id": "1783669453.9739432",
+      "status": "completed",
+      "instruction": "Expand event system beyond on_click:\n- on_change for text boxes\n- on_focus/on_blur for focus changes\n- on_timer for timer control\n- on_load for form initialization\nUpdate code templates and runtime dispatcher",
+      "startTimestamp": 1783671108.6745808,
+      "endTimestamp": 1783671438.7501163,
+      "log": []
+    },
+    "1783669453.9740608": {
+      "id": "1783669453.9740608",
+      "status": "completed",
+      "instruction": "Develop comprehensive example projects:\n- Hello World (basic)\n- Calculator (buttons, text boxes, math)\n- Text Editor (multi-line text, menus, file I/O)\n- Database Browser (list boxes, data binding simulation)\n- Timer Demo (timer events, animations)\nPlace in examples/ directory",
+      "startTimestamp": 1783671302.706587,
+      "endTimestamp": 1783671585.5601964,
+      "log": []
+    },
+    "1783669453.9741776": {
+      "id": "1783669453.9741776",
+      "status": "completed",
+      "instruction": "Create documentation:\n- API reference for all controls and properties\n- Event handling guide\n- Project file format specification\n- Porting guide (VB1 DOS to RAD-TUI)\n- Tutorial: Building Your First Application\n- Update HISTORY.md with changes",
+      "startTimestamp": 1783671438.7501173,
+      "endTimestamp": 1783671746.8004675,
+      "log": []
+    },
+    "1783669453.9742963": {
+      "id": "1783669453.9742963",
+      "status": "in_progress",
+      "instruction": "Test and fix issues:\n- Test on multiple terminal emulators (xterm, gnome-terminal, konsole, alacritty)\n- Verify mouse handling consistency\n- Fix UTF-8 box drawing issues\n- Test project file interchange between Python/FreeBASIC\n- Performance optimization",
+      "startTimestamp": 1783671585.5601974,
+      "endTimestamp": null,
+      "log": []
+    }
+  }
+}

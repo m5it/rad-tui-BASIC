@@ -1,0 +1,142 @@
+{
+  "x": 10,
+  "y": 2,
+  "w": 60,
+  "h": 22,
+  "title": "Text Editor",
+  "menu_count": 3,
+  "menu_items": [
+    {
+      "caption": "File",
+      "name_id": "mnuFile",
+      "parent": 0,
+      "has_submenu": true
+    },
+    {
+      "caption": "New",
+      "name_id": "mnuNew",
+      "parent": 1,
+      "has_submenu": false
+    },
+    {
+      "caption": "Exit",
+      "name_id": "mnuExit",
+      "parent": 1,
+      "has_submenu": false
+    }
+  ],
+  "controls": [
+    {
+      "x": 2,
+      "y": 2,
+      "w": 56,
+      "h": 1,
+      "tool_type": 13,
+      "name_id": "txtFilename",
+      "caption": "untitled.txt",
+      "code": "def on_change_txtFilename():\n    pass\n",
+      "checked": false,
+      "group": "",
+      "parent": 0,
+      "items": [],
+      "selected_index": -1,
+      "scroll_offset": 0
+    },
+    {
+      "x": 2,
+      "y": 4,
+      "w": 56,
+      "h": 14,
+      "tool_type": 10,
+      "name_id": "lstLines",
+      "caption": "Text Lines",
+      "code": "def on_change_lstLines():\n    lblStatus.caption = \"Line \" + str(lstLines.selected_index + 1) + \" selected\"\n",
+      "checked": false,
+      "group": "",
+      "parent": 0,
+      "items": ["Line 1: Type your text here", "Line 2: Use the text box above", "Line 3: Press buttons to edit", "Line 4:", "Line 5:", "Line 6:", "Line 7:", "Line 8:", "Line 9:", "Line 10:"],
+      "selected_index": -1,
+      "scroll_offset": 0
+    },
+    {
+      "x": 2,
+      "y": 19,
+      "w": 12,
+      "h": 3,
+      "tool_type": 3,
+      "name_id": "btnNew",
+      "caption": "New",
+      "code": "def on_click_btnNew():\n    txtFilename.caption = \"untitled.txt\"\n    lstLines.items = [\"\"]\n    lblStatus.caption = \"New file created\"\n",
+      "checked": false,
+      "group": "",
+      "parent": 0,
+      "items": [],
+      "selected_index": -1,
+      "scroll_offset": 0
+    },
+    {
+      "x": 15,
+      "y": 19,
+      "w": 12,
+      "h": 3,
+      "tool_type": 3,
+      "name_id": "btnAddLine",
+      "caption": "Add Line",
+      "code": "def on_click_btnAddLine():\n    lstLines.items.append(\"New line\")\n    lblStatus.caption = \"Line added\"\n",
+      "checked": false,
+      "group": "",
+      "parent": 0,
+      "items": [],
+      "selected_index": -1,
+      "scroll_offset": 0
+    },
+    {
+      "x": 28,
+      "y": 19,
+      "w": 12,
+      "h": 3,
+      "tool_type": 3,
+      "name_id": "btnClear",
+      "caption": "Clear",
+      "code": "def on_click_btnClear():\n    lstLines.items = []\n    lblStatus.caption = \"Cleared\"\n",
+      "checked": false,
+      "group": "",
+      "parent": 0,
+      "items": [],
+      "selected_index": -1,
+      "scroll_offset": 0
+    },
+    {
+      "x": 41,
+      "y": 19,
+      "w": 12,
+      "h": 3,
+      "tool_type": 3,
+      "name_id": "btnExit",
+      "caption": "Exit",
+      "code": "def on_click_btnExit():\n    msgbox(\"Exiting Text Editor\")\n",
+      "checked": false,
+      "group": "",
+      "parent": 0,
+      "items": [],
+      "selected_index": -1,
+      "scroll_offset": 0
+    },
+    {
+      "x": 2,
+      "y": 23,
+      "w": 56,
+      "h": 1,
+      "tool_type": 9,
+      "name_id": "lblStatus",
+      "caption": "Ready - Select a line to edit",
+      "code": "",
+      "checked": false,
+      "group": "",
+      "parent": 0,
+      "items": [],
+      "selected_index": -1,
+      "scroll_offset": 0
+    }
+  ]
+}
