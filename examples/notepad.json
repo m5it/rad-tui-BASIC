@@ -1,0 +1,63 @@
+{
+  "version": "2.1.0",
+  "x": 1,
+  "y": 1,
+  "w": 80,
+  "h": 24,
+  "title": "Notepad - Untitled",
+  "menu_count": 12,
+  "menu_items": [
+    {"caption": "File", "name_id": "mnuFile", "parent": 0, "has_submenu": true},
+    {"caption": "New", "name_id": "mnuNew", "parent": 1, "has_submenu": false},
+    {"caption": "Open...", "name_id": "mnuOpen", "parent": 1, "has_submenu": false},
+    {"caption": "Save", "name_id": "mnuSave", "parent": 1, "has_submenu": false},
+    {"caption": "Save As...", "name_id": "mnuSaveAs", "parent": 1, "has_submenu": false},
+    {"caption": "Exit", "name_id": "mnuExit", "parent": 1, "has_submenu": false},
+    {"caption": "Edit", "name_id": "mnuEdit", "parent": 0, "has_submenu": true},
+    {"caption": "Cut", "name_id": "mnuCut", "parent": 7, "has_submenu": false},
+    {"caption": "Copy", "name_id": "mnuCopy", "parent": 7, "has_submenu": false},
+    {"caption": "Paste", "name_id": "mnuPaste", "parent": 7, "has_submenu": false},
+    {"caption": "Find", "name_id": "mnuFind", "parent": 7, "has_submenu": false},
+    {"caption": "Select All", "name_id": "mnuSelectAll", "parent": 7, "has_submenu": false}
+  ],
+  "controls": [
+    {
+      "x": 1,
+      "y": 2,
+      "w": 78,
+      "h": 20,
+      "tool_type": 15,
+      "name_id": "txtEditor",
+      "caption": "",
+      "code": "def on_change_txtEditor():\n    update_status()\n\ndef on_key_press_txtEditor():\n    # Keyboard shortcuts\n    if key == 'Ctrl+S':\n        on_menu_mnuSave()\n    elif key == 'Ctrl+O':\n        on_menu_mnuOpen()\n    elif key == 'Ctrl+N':\n        on_menu_mnuNew()\n    elif key == 'Ctrl+F':\n        on_menu_mnuFind()\n",
+      "checked": false,
+      "group": "",
+      "parent": 0,
+      "items": [],
+      "selected_index": -1,
+      "scroll_offset": 0,
+      "word_wrap": true,
+      "cursor_x": 0,
+      "cursor_y": 0,
+      "scroll_x": 0,
+      "scroll_y": 0
+    },
+    {
+      "x": 1,
+      "y": 22,
+      "w": 78,
+      "h": 1,
+      "tool_type": 9,
+      "name_id": "lblStatus",
+      "caption": "Ln 1, Col 1 | 0 lines | 0 words",
+      "code": "",
+      "checked": false,
+      "group": "",
+      "parent": 0,
+      "items": [],
+      "selected_index": -1,
+      "scroll_offset": 0
+    }
+  ],
+  "code": "current_file = ''\nmodified = False\n\ndef on_load_frmMain():\n    global current_file, modified\n    current_file = ''\n    modified = False\n    frmMain.title = 'Notepad - Untitled'\n    update_status()\n\ndef update_status():\n    text = txtEditor.caption\n    lines = text.split('\\n') if text else ['']\n    words = len(text.split()) if text.strip() else 0\n    chars = len(text)\n    line_num = txtEditor.cursor_y + 1\n    col_num = txtEditor.cursor_x + 1\n    lblStatus.caption = f'Ln {line_num}, Col {col_num} | {len(lines)} lines | {words} words | {chars} chars'\n    global modified\n    if text:\n        modified = True\n\ndef on_menu_mnuNew():\n    global current_file, modified\n    if modified and len(txtEditor.caption) > 0:\n        result = msgbox('Save changes?', 'Confirm', 'yesnocancel')\n        if result == 'yes':\n            on_menu_mnuSave()\n        elif result == 'cancel':\n            return\n    txtEditor.caption = ''\n    current_file = ''\n    modified = False\n    frmMain.title = 'Notepad - Untitled'\n    update_status()\n\ndef on_menu_mnuOpen():\n    global current_file, modified\n    if modified and len(txtEditor.caption) > 0:\n        result = msgbox('Save changes?', 'Confirm', 'yesnocancel')\n        if result == 'yes':\n            on_menu_mnuSave()\n        elif result == 'cancel':\n            return\n    \n    filename = file_dialog('open', ['.txt', '.py', '.bas', '*'])\n    if filename:\n        handle = open_file(filename, 'r')\n        if handle:\n            lines = []\n            line = read_line(handle)\n            while line is not None:\n                lines.append(line)\n                line = read_line(handle)\n            close_file(handle)\n            txtEditor.caption = '\\n'.join(lines)\n            current_file = filename\n            modified = False\n            frmMain.title = f'Notepad - {filename}'\n            update_status()\n            msgbox(f'Loaded {len(lines)} lines', 'Open')\n\ndef on_menu_mnuSave():\n    global current_file\n    if current_file == '':\n        on_menu_mnuSaveAs()\n    else:\n        save_current_file()\n\ndef on_menu_mnuSaveAs():\n    global current_file\n    filename = file_dialog('save', ['.txt', '.py', '.bas'])\n    if filename:\n        if '.' not in filename:\n            filename = filename + '.txt'\n        if file_exists(filename):\n            result = msgbox(f'Overwrite {filename}?', 'Confirm', 'yesno')\n            if result != 'yes':\n                return\n        current_file = filename\n        save_current_file()\n\ndef save_current_file():\n    global current_file, modified\n    handle = open_file(current_file, 'w')\n    if handle:\n        lines = txtEditor.caption.split('\\n')\n        for line in lines:\n            write_line(handle, line)\n        close_file(handle)\n        modified = False\n        frmMain.title = f'Notepad - {current_file}'\n        msgbox('File saved!', 'Save')\n\ndef on_menu_mnuExit():\n    global modified\n    if modified and len(txtEditor.caption) > 0:\n        result = msgbox('Save changes before exit?', 'Confirm', 'yesnocancel')\n        if result == 'yes':\n            on_menu_mnuSave()\n        elif result == 'cancel':\n            return\n    exit()\n\ndef on_menu_mnuCut():\n    selected = txtEditor.get_selected_text() if hasattr(txtEditor, 'get_selected_text') else ''\n    if selected:\n        clipboard_set(selected)\n        # Delete selected text\n        txtEditor.caption = txtEditor.caption.replace(selected, '', 1)\n        update_status()\n\ndef on_menu_mnuCopy():\n    selected = txtEditor.get_selected_text() if hasattr(txtEditor, 'get_selected_text') else ''\n    if selected:\n        clipboard_set(selected)\n\ndef on_menu_mnuPaste():\n    text = clipboard_get()\n    if text:\n        txtEditor.caption = txtEditor.caption + text\n        update_status()\n\ndef on_menu_mnuFind():\n    search_term = inputbox('Find:', 'Find', '')\n    if search_term:\n        pos = txtEditor.caption.find(search_term)\n        if pos >= 0:\n            msgbox(f'Found at position {pos}', 'Find')\n        else:\n            msgbox(f'\"{search_term}\" not found', 'Find')\n\ndef on_menu_mnuSelectAll():\n    # Select all text\n    txtEditor.cursor_x = 0\n    txtEditor.cursor_y = 0\n    # In a real implementation, this would select all text\n    msgbox('Select All - All text selected', 'Edit')\n"
+}

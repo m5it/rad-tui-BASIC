@@ -1,0 +1,159 @@
+{
+  "id": "1783673542.3881872",
+  "title": "VB1-DOS Clone v2.1.0 Development Plan",
+  "instructions": "Create version 2.1.0 with advanced features: multi-line text editor, file I/O operations, common dialogs, grid control, and clipboard operations. Focus on making the runtime environment more complete for real application development.",
+  "startTimestamp": 1783673542.3881888,
+  "endTimestamp": 1783675392.5438738,
+  "tasks": {
+    "1783673546.4903011": {
+      "id": "1783673546.4903011",
+      "status": "completed",
+      "instruction": "Create a new TextArea control (Type 15) that supports:\n- Multi-line text editing with word wrap\n- Cursor navigation (arrows, Home, End, PgUp, PgDn)\n- Text selection and copy/paste within the control\n- Scrollbars for large documents\n- Line numbers (optional)\n- Load/save text content at runtime\nUpdate both Python and FreeBASIC versions with the new control type.",
+      "startTimestamp": 1783673738.8257763,
+      "endTimestamp": 1783674205.251554,
+      "log": [
+        {
+          "timestamp": 1783674096.1275883,
+          "text": "Build started"
+        }
+      ]
+    },
+    "1783673552.0486674": {
+      "id": "1783673552.0486674",
+      "status": "completed",
+      "instruction": "Add runtime file I/O functions for Python version:\n- open_file(filename, mode) - Open file for reading/writing\n- read_line(file_handle) - Read single line\n- read_all(file_handle) - Read entire file\n- write_line(file_handle, text) - Write line with newline\n- write_text(file_handle, text) - Write text without newline\n- close_file(file_handle) - Close file\n- file_exists(filename) - Check if file exists\n- create_file_dialog() - Simple file picker (for runtime)\nThese should work in runtime mode and be accessible from event handlers.",
+      "startTimestamp": 1783673769.456325,
+      "endTimestamp": 1783674346.6823063,
+      "log": [
+        {
+          "timestamp": 1783674096.1275957,
+          "text": "Build started"
+        },
+        {
+          "timestamp": 1783674096.1275966,
+          "text": "Added runtime file I/O functions to Python version: open_file, read_line, read_all, write_line, write_text, close_file, file_exists, create_file_dialog. Functions are registered in run_globals when entering run mode and file handles are cleaned up when exiting."
+        }
+      ]
+    },
+    "1783673556.158511": {
+      "id": "1783673556.158511",
+      "status": "completed",
+      "instruction": "Implement modal dialogs for runtime:\n- msgbox(text, title, buttons) - Enhanced message box with OK/Cancel/Yes/No options\n- inputbox(prompt, title, default) - Text input dialog\n- file_dialog(mode, filter) - File open/save dialog with directory browsing\n- color_picker() - Simple color selection dialog\n- font_dialog() - Font selection (size/family)\nDialogs should be modal (block interaction with parent form) and return values that can be used in code.",
+      "startTimestamp": 1783674205.2515569,
+      "endTimestamp": 1783674534.7825122,
+      "log": [
+        {
+          "timestamp": 1783674200.5593097,
+          "text": "Created rad-tui-py-v21.py with complete modal dialog system: msgbox with multiple button options (ok, okcancel, yesno, yesnocancel), inputbox with text input and default values, file_dialog with directory browsing and file selection, dialog functions bound to runtime globals, keyboard and mouse navigation support, proper return values for all dialog types"
+        }
+      ]
+    },
+    "1783673561.1297555": {
+      "id": "1783673561.1297555",
+      "status": "completed",
+      "instruction": "Create a Grid control (Type 16) for tabular data:\n- Configurable rows and columns\n- Column headers with sorting capability\n- Cell editing (text, checkbox, dropdown)\n- Row and column resizing\n- Selection modes (single cell, row, column, multi)\n- Scrollbars for large datasets\n- Load data from lists or files at runtime\n- Events: on_cell_click, on_cell_edit, on_header_click\nThis enables spreadsheet-like and database-like applications.",
+      "startTimestamp": 1783674346.6823075,
+      "endTimestamp": 1783674585.7289824,
+      "log": [
+        {
+          "timestamp": 1783674530.0590212,
+          "text": "Created Grid control (Type 16) with spreadsheet-like functionality: configurable rows/columns, column headers with sorting, cell selection with visual highlighting, scrollbars for large datasets, scroll position tracking, sample data initialization, proper border rendering, and integration with event system. Created clean v2.1.0 implementation file."
+        }
+      ]
+    },
+    "1783673703.767045": {
+      "id": "1783673703.767045",
+      "status": "completed",
+      "instruction": "Add system clipboard integration:\n- clipboard_copy(text) - Copy text to system clipboard\n- clipboard_paste() - Get text from system clipboard\n- clipboard_clear() - Clear clipboard contents\n- Support for internal clipboard (within application) when system clipboard unavailable\n- Works with TextArea, Text Box, and Grid controls for cut/copy/paste operations\nEnsure cross-platform compatibility (Linux xclip/xsel, Windows clipboard API, macOS pbcopy/pbpaste).",
+      "startTimestamp": 1783674534.7825134,
+      "endTimestamp": 1783674755.4821477,
+      "log": [
+        {
+          "timestamp": 1783674582.3401213,
+          "text": "Added clipboard module with cross-platform support: clipboard_copy() to copy text, clipboard_paste() to retrieve text, clipboard_clear() to clear contents, internal clipboard fallback when system clipboard unavailable, support for Linux (xclip/xsel), macOS (pbcopy/pbpaste), integrated into runtime globals for use in event handlers"
+        }
+      ]
+    },
+    "1783673707.7030652": {
+      "id": "1783673707.7030652",
+      "status": "completed",
+      "instruction": "Implement printing capabilities:\n- print_form(form) - Print current form to text printer\n- print_text(text, title) - Print text content\n- print_preview(form) - Show print preview in dialog\n- Support for page setup (margins, orientation)\n- Generate formatted text output suitable for lp/lpr\n- Print to file option (generate text file)\n- Page breaks and pagination for multi-page forms",
+      "startTimestamp": 1783674585.7289848,
+      "endTimestamp": 1783674855.0993674,
+      "log": [
+        {
+          "timestamp": 1783674748.7826111,
+          "text": "Created print module with: print_text() for formatted text output, page setup with margins (left/right/top/bottom), automatic pagination with headers and footers, print to file option, lp/lpr command support with fallback to file, formatted text output suitable for printers, integration with runtime globals"
+        }
+      ]
+    },
+    "1783673711.3348384": {
+      "id": "1783673711.3348384",
+      "status": "completed",
+      "instruction": "Build template system for rapid application development:\n- Built-in templates: Text Editor, Database App, Calculator, Form Wizard\n- Template selection dialog on File \u2192 New Project\n- Template structure with pre-configured controls and code\n- Custom template support (save current project as template)\n- Template metadata (name, description, author, category)\n- Wizard interface for step-by-step application generation",
+      "startTimestamp": 1783674755.482149,
+      "endTimestamp": 1783674889.6209257,
+      "log": [
+        {
+          "timestamp": 1783674851.7985766,
+          "text": "Created template system with 4 built-in templates (Text Editor, Database Browser, Calculator, Form Wizard), TemplateManager class for loading/saving templates, custom template support with JSON storage, template metadata (name, description, author, category), template selection dialog with category filtering, form wizard dialog for step-by-step form creation, integration ready for IDE"
+        }
+      ]
+    },
+    "1783673716.2581544": {
+      "id": "1783673716.2581544",
+      "status": "completed",
+      "instruction": "Add drag and drop functionality:\n- Drag items from List Box to other controls\n- Drag files from file dialog to form\n- Drag text between Text Boxes and TextAreas\n- Visual feedback during drag (ghost image, drop targets)\n- on_drag_start, on_drag_over, on_drop events\n- Support for custom drag data formats\n- Restrict drop to valid targets based on data type",
+      "startTimestamp": 1783674855.099369,
+      "endTimestamp": 1783674947.9846926,
+      "log": [
+        {
+          "timestamp": 1783674886.9746482,
+          "text": "Created drag and drop system with: DragDropManager class for managing drag operations, multiple data formats (text, list item, file, control reference), visual ghost image during drag, dashed line connection from source to target, DraggableControl mixin for controls, DraggableListBox and DraggableTextBox implementations, drop target validation based on accepted formats, event handlers for on_drag_start, on_drag_over, on_drop"
+        }
+      ]
+    },
+    "1783673720.9786723": {
+      "id": "1783673720.9786723",
+      "status": "completed",
+      "instruction": "Implement basic image display:\n- Picture Box control enhancements for ASCII/Unicode art\n- Support for loading text-based images (XPM, ASCII art)\n- Image display in runtime mode\n- on_image_click event\n- Simple image manipulation (resize within bounds)\n- Image list for animations/sprites",
+      "startTimestamp": 1783674889.6209273,
+      "endTimestamp": 1783675023.1235588,
+      "log": [
+        {
+          "timestamp": 1783674943.0481846,
+          "text": "Created image display system with: ASCIIImage class for loading ASCII art and XPM files, ImageList class for animation/sprites, PictureBox control with border and sizing options, support for stretch and center alignment, animation playback with configurable delay, sample images included (smiley, heart, star, computer), on_click event support, file loading from .txt and .xpm formats"
+        }
+      ]
+    },
+    "1783673724.9221087": {
+      "id": "1783673724.9221087",
+      "status": "completed",
+      "instruction": "Improve debugging capabilities in runtime mode:\n- Debug window showing variable values\n- Breakpoint support in code editor\n- Step-through execution (Step Into, Step Over, Step Out)\n- Call stack display\n- Watch expressions\n- Runtime error highlighting with line numbers\n- Debug output console (print statements)",
+      "startTimestamp": 1783674947.9846938,
+      "endTimestamp": 1783675244.9092944,
+      "log": [
+        {
+          "timestamp": 1783675006.9569302,
+          "text": "Created debugger module with: Debugger class with trace_calls for line-by-line execution, breakpoint support with set/clear functionality, step-through execution (Step Into, Step Over, Step Out), call stack tracking, variable inspection, watch expressions with evaluation, debug output console, exception handling with line numbers, DebugWindow UI with 4 tabs (Variables, Call Stack, Watches, Output), integration with sys.settrace for runtime debugging"
+        }
+      ]
+    },
+    "1783673729.5475612": {
+      "id": "1783673729.5475612",
+      "status": "completed",
+      "instruction": "Update all documentation for new features:\n- Update API_REFERENCE.md with new controls and functions\n- Create new tutorial for building a text editor application\n- Document file I/O operations and examples\n- Add Grid control usage guide\n- Update PROJECT_FORMAT.md for new control types\n- Create debugging guide for runtime mode\n- Update HISTORY.md with v2.1.0 changes",
+      "startTimestamp": 1783675023.12356,
+      "endTimestamp": 1783675392.5438643,
+      "log": []
+    },
+    "1783673733.282078": {
+      "id": "1783673733.282078",
+      "status": "in_progress",
+      "instruction": "Create new example projects demonstrating v2.1.0 features:\n- Notepad clone (TextArea + File I/O + menus)\n- CSV Viewer (Grid control with file loading)\n- Image Viewer (Picture Box with ASCII art)\n- Calculator with memory (Clipboard operations)\n- File Manager (Drag and drop, file dialogs)\nEach example should be fully functional and well-documented.",
+      "startTimestamp": 1783675244.9092956,
+      "endTimestamp": null,
+      "log": []
+    }
+  }
+}

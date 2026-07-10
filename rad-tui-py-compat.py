@@ -847,62 +847,732 @@ def main(stdscr):
             'kw': curses.A_BOLD,
             'str': 0,
             'comment': curses.A_DIM,
-            'num': 0
-        }
-
-    tools = Toolbox(1, 2)
-    windows = [
-        Window(21, 4, 36, 17, "Form 1"),
-        Window(59, 2, 20, 15, "Properties")
-    ]
-
-    selected_win_idx = -1
-    selected_ctrl_idx = -1
-    editing_prop = 0 
-    edit_buffer = ""
-
-    mx, my, old_mx, old_my = 0, 0, 0, 0
-    dragged_win = -1
-    dragged_ctrl = -1
-    dragged_tool = False
-    resizing_ctrl = False
-    mouse_down = False
-    drag_offset_x, drag_offset_y = 0, 0
-
-    last_click_time = 0.0
-    last_click_x = -1
-    last_click_y = -1
-    
-    code_mode = False
-    code_lines = []
-    code_cx, code_cy = 0, 0
-    code_target_ctrl = None
-    code_event_type = "click"
-    
     run_mode = False
     run_globals = {}
     run_focused_ctrl = -1 
     design_backup = None
+    
+    # File I/O handle management for runtime
+    run_file_handles = {}
+    run_file_counter = 0
+    
+    def open_file(filename, mode='r'):
+    run_mode = False
+    run_globals = {}
+    run_focused_ctrl = -1 
+    design_backup = None
+    
+    # File I/O handle management for runtime - must be in outer scope
+    run_file_handles = {}
+    run_file_counter = [0]  # Use list for mutable reference
 
     def commit_edit():
         nonlocal editing_prop, edit_buffer, selected_win_idx, selected_ctrl_idx
-        if editing_prop > 0 and selected_win_idx >= 0 and selected_ctrl_idx >= 0:
-            c = windows[selected_win_idx].controls[selected_ctrl_idx]
+        Returns: "ok", "cancel", "yes", "no"
+        """
+        C_BORDER = C['border']
+        C_BG = C['bg']
+        
+        lines = text.split('\n')
+        content_w = max([len(l) for l in lines] + [len(title), 20])
+        
+        # Button configurations
+        btn_configs = {
+            'ok': ['[ OK ]'],
+            'okcancel': ['[ OK ]', '[ Cancel ]'],
+            'yesno': ['[ Yes ]', '[ No ]'],
+            'yesnocancel': ['[ Yes ]', '[ No ]', '[ Cancel ]']
+        }
+        
+        btn_list = btn_configs.get(buttons, ['[ OK ]'])
+        btn_w = sum(len(b) + 2 for b in btn_list) - 2
+        w = max(content_w + 4, btn_w + 4, len(title) + 4)
+    def open_file(filename, mode='r'):
+        """Open a file and return a handle"""
+        try:
+            f = open(filename, mode, encoding='utf-8')
+            run_file_counter[0] += 1
+            handle = f"file_{run_file_counter[0]}"
+            run_file_handles[handle] = f
+            return handle
+        except Exception as e:
+            run_globals['__msg__'] = f"File Error: Cannot open {filename}\n{e}"
+            return None
+    
+    def read_line(file_handle):
+        """Read a single line from file"""
+        if file_handle in run_file_handles:
             try:
-                if editing_prop == 1: c.name_id = edit_buffer
-                elif editing_prop == 2: c.caption = edit_buffer
-                elif editing_prop == 3: c.x = int(edit_buffer)
-                elif editing_prop == 4: c.y = int(edit_buffer)
-                elif editing_prop == 5: c.w = int(edit_buffer)
-                elif editing_prop == 6: c.h = int(edit_buffer)
-            except ValueError:
-                pass 
-            c.w = max(4, c.w)
-            c.h = max(3 if c.tool_type == 3 else 1, c.h)
-            c.x = max(1, min(c.x, windows[selected_win_idx].w - c.w - 1))
-            c.y = max(1, min(c.y, windows[selected_win_idx].h - c.h - 1))
-        editing_prop = 0
+                line = run_file_handles[file_handle].readline()
+                return line.rstrip('\n') if line else None
+            except Exception as e:
+                run_globals['__msg__'] = f"Read Error: {e}"
+                return None
+        return None
+    
+    def read_all(file_handle):
+        """Read entire file content"""
+        if file_handle in run_file_handles:
+            try:
+                return run_file_handles[file_handle].read()
+            except Exception as e:
+                run_globals['__msg__'] = f"Read Error: {e}"
+    def create_file_dialog(mode='open', filter_ext=None):
+        """Simple file dialog for runtime"""
+        if mode == 'save':
+            prompt = "Save file (enter path)"
+        else:
+            prompt = "Open file (enter path)"
+        return prompt_input(stdscr, prompt, C)
 
+    # ==========================================================
+    # Modal Dialog Functions for Runtime
+    # ==========================================================
+    
+    def msgbox(text, title="Message", buttons="ok"):
+        """Enhanced message box with multiple button options"""
+        C_BORDER = C['border']
+        C_BG = C['bg']
+        
+        lines = text.split('\n')
+        content_w = max([len(l) for l in lines] + [len(title), 20])
+        
+        btn_configs = {
+            'ok': ['[ OK ]'],
+            'okcancel': ['[ OK ]', '[ Cancel ]'],
+            'yesno': ['[ Yes ]', '[ No ]'],
+            'yesnocancel': ['[ Yes ]', '[ No ]', '[ Cancel ]']
+        }
+        
+        btn_list = btn_configs.get(buttons, ['[ OK ]'])
+        btn_w = sum(len(b) + 2 for b in btn_list) - 2
+        w = max(content_w + 4, btn_w + 4, len(title) + 4)
+        h = len(lines) + 6
+        
+        x = max(0, (curses.COLS - w) // 2)
+        y = max(0, (curses.LINES - h) // 2)
+        
+        w = min(w, curses.COLS - 2)
+        h = min(h, curses.LINES - 2)
+        
+        def draw_dialog(selected_btn=0):
+            top = '+' + '-' * (w - 2) + '+'
+            write_at(stdscr, x, y, top, C_BORDER)
+            
+            for i in range(1, h - 1):
+                write_at(stdscr, x, y + i, '|', C_BORDER)
+                write_at(stdscr, x + 1, y + i, ' ' * (w - 2), C_BG)
+                write_at(stdscr, x + w - 1, y + i, '|', C_BORDER)
+            
+            bottom = '+' + '-' * (w - 2) + '+'
+            write_at(stdscr, x, y + h - 1, bottom, C_BORDER)
+            
+            title_x = x + (w - len(title)) // 2
+            write_at(stdscr, title_x, y, f" {title} ", C_BORDER)
+            
+            for i, line in enumerate(lines[:h-4]):
+                write_at(stdscr, x + 2, y + 2 + i, line[:w-4], C_BG)
+            
+            btn_x = x + (w - btn_w) // 2
+            btn_y = y + h - 2
+            
+            for i, btn in enumerate(btn_list):
+                attr = C['active_tool'] if i == selected_btn else C_BG
+                write_at(stdscr, btn_x, btn_y, btn, attr)
+                btn_x += len(btn) + 2
+            
+            stdscr.refresh()
+        
+        selected = 0
+        draw_dialog(selected)
+        
+        while True:
+            ch = stdscr.getch()
+            
+            if ch == curses.KEY_MOUSE:
+                try:
+                    _, mx, my, _, bstate = curses.getmouse()
+                    if bstate & curses.BUTTON1_CLICKED:
+                        btn_x = x + (w - btn_w) // 2
+                        btn_y = y + h - 2
+                        for i, btn in enumerate(btn_list):
+                            if btn_y == my and btn_x <= mx < btn_x + len(btn):
+                                btn_values = {
+                                    'ok': ['ok'],
+                                    'okcancel': ['ok', 'cancel'],
+                                    'yesno': ['yes', 'no'],
+                                    'yesnocancel': ['yes', 'no', 'cancel']
+                                }
+                                return btn_values.get(buttons, ['ok'])[i]
+                            btn_x += len(btn) + 2
+                except:
+                    pass
+            
+            elif ch == curses.KEY_LEFT:
+                selected = max(0, selected - 1)
+                draw_dialog(selected)
+            
+            elif ch == curses.KEY_RIGHT:
+                selected = min(len(btn_list) - 1, selected + 1)
+                draw_dialog(selected)
+            
+            elif ch == 9:
+                selected = (selected + 1) % len(btn_list)
+                draw_dialog(selected)
+            
+            elif ch in (10, 13, curses.KEY_ENTER):
+                btn_values = {
+                    'ok': ['ok'],
+                    'okcancel': ['ok', 'cancel'],
+                    'yesno': ['yes', 'no'],
+                    'yesnocancel': ['yes', 'no', 'cancel']
+                }
+                return btn_values.get(buttons, ['ok'])[selected]
+            
+            elif ch == 27:
+                if buttons in ['okcancel', 'yesnocancel']:
+                    return 'cancel'
+                elif buttons == 'yesno':
+                    return 'no'
+                return 'ok'
+            
+            time.sleep(0.01)
+                return True
+            except Exception as e:
+                run_globals['__msg__'] = f"Close Error: {e}"
+                return False
+        return False
+    
+    def file_exists(filename):
+        """Check if file exists"""
+        return os.path.exists(filename)
+                line_text = line[:w-4]
+                write_at(stdscr, x + 2, y + 2 + i, line_text, C_BG)
+            
+            # Buttons
+            btn_x = x + (w - btn_w) // 2
+            btn_y = y + h - 2
+            
+            for i, btn in enumerate(btn_list):
+                attr = C['active_tool'] if i == selected_btn else C_BG
+                write_at(stdscr, btn_x, btn_y, btn, attr)
+                btn_x += len(btn) + 2
+            
+            stdscr.refresh()
+        
+        selected = 0
+        draw_dialog(selected)
+        
+        while True:
+            ch = stdscr.getch()
+            
+            if ch == curses.KEY_MOUSE:
+                try:
+                    _, mx, my, _, bstate = curses.getmouse()
+                    if bstate & curses.BUTTON1_CLICKED:
+                        # Check button clicks
+                        btn_x = x + (w - btn_w) // 2
+                        btn_y = y + h - 2
+                        for i, btn in enumerate(btn_list):
+                            if btn_y == my and btn_x <= mx < btn_x + len(btn):
+                                return ['ok', 'yes', 'no', 'cancel'][i % 4] if buttons != 'okcancel' else (['ok', 'cancel'][i] if i < 2 else 'ok')
+                            btn_x += len(btn) + 2
+                except:
+                    pass
+            
+            elif ch == curses.KEY_LEFT:
+                selected = max(0, selected - 1)
+                draw_dialog(selected)
+            
+            elif ch == curses.KEY_RIGHT:
+                selected = min(len(btn_list) - 1, selected + 1)
+                draw_dialog(selected)
+            
+            elif ch == 9:  # Tab
+                selected = (selected + 1) % len(btn_list)
+                draw_dialog(selected)
+            
+            elif ch in (10, 13, curses.KEY_ENTER):  # Enter
+                btn_values = {
+                    'ok': ['ok'],
+                    'okcancel': ['ok', 'cancel'],
+                    'yesno': ['yes', 'no'],
+                    'yesnocancel': ['yes', 'no', 'cancel']
+                }
+                values = btn_values.get(buttons, ['ok'])
+                return values[selected] if selected < len(values) else 'ok'
+            
+            elif ch == 27:  # Escape
+                if buttons in ['okcancel', 'yesnocancel']:
+                    return 'cancel'
+                elif buttons == 'yesno':
+                    return 'no'
+                else:
+                    return 'ok'
+            
+            time.sleep(0.01)
+    
+    def inputbox(prompt, title="Input", default=""):
+        """
+        Text input dialog with prompt and default value
+        Returns: entered text or None if cancelled
+        """
+        C_BORDER = C['border']
+        C_BG = C['bg']
+        C_TB = C['textbox']
+        
+        prompt_lines = prompt.split('\n')
+        content_w = max([len(l) for l in prompt_lines] + [len(title), 40])
+        w = min(content_w + 4, curses.COLS - 4)
+        h = len(prompt_lines) + 6
+        
+        x = max(0, (curses.COLS - w) // 2)
+        y = max(0, (curses.LINES - h) // 2)
+        
+        buffer = default
+        
+        def draw_input_dialog():
+            # Border
+            write_at(stdscr, x, y, '+' + '-' * (w - 2) + '+', C_BORDER)
+            for i in range(1, h - 1):
+                write_at(stdscr, x, y + i, '|', C_BORDER)
+                write_at(stdscr, x + 1, y + i, ' ' * (w - 2), C_BG)
+                write_at(stdscr, x + w - 1, y + i, '|', C_BORDER)
+            write_at(stdscr, x, y + h - 1, '+' + '-' * (w - 2) + '+', C_BORDER)
+            
+            # Title
+            title_x = x + (w - len(title)) // 2
+            write_at(stdscr, title_x, y, f" {title} ", C_BORDER)
+            
+            # Prompt
+            for i, line in enumerate(prompt_lines):
+                write_at(stdscr, x + 2, y + 2 + i, line[:w-4], C_BG)
+            
+            # Input field
+            input_y = y + h - 3
+            write_at(stdscr, x + 2, input_y, ' ' * (w - 4), C_TB)
+            display_text = (buffer + "_")[:w-4]
+            write_at(stdscr, x + 2, input_y, display_text, C_TB)
+            
+            # Buttons hint
+            hint = "[Enter=OK, Esc=Cancel]"
+            hint_x = x + (w - len(hint)) // 2
+            write_at(stdscr, hint_x, y + h - 2, hint, C_BG)
+            
+            stdscr.refresh()
+        
+        while True:
+            draw_input_dialog()
+            ch = stdscr.getch()
+            
+            if ch == 27:  # Escape
+                return None
+            
+            elif ch in (10, 13, curses.KEY_ENTER):  # Enter
+                return buffer
+            
+            elif ch in (8, 127, curses.KEY_BACKSPACE):  # Backspace
+                buffer = buffer[:-1]
+            
+            elif 32 <= ch <= 126:  # Printable characters
+                if len(buffer) < w - 5:
+                    buffer += chr(ch)
+            
+            time.sleep(0.01)
+    
+    def file_dialog(mode='open', filter_ext=None, start_dir=None):
+        """
+        Simple file browser dialog
+        mode: 'open' or 'save'
+        filter_ext: list of extensions like ['.txt', '.json']
+        Returns: selected filepath or None if cancelled
+        """
+        C_BORDER = C['border']
+        C_BG = C['bg']
+        C_ACTIVE = C['active_tool']
+        
+        current_dir = start_dir or os.getcwd()
+        selected_file = ""
+        files = []
+        cursor = 0
+        scroll_offset = 0
+        
+        w = min(60, curses.COLS - 4)
+        h = min(20, curses.LINES - 4)
+        x = max(0, (curses.COLS - w) // 2)
+        y = max(0, (curses.LINES - h) // 2)
+        
+        visible_rows = h - 6  # Space for header, path, and buttons
+        
+        def refresh_files():
+            nonlocal files
+            try:
+                entries = os.listdir(current_dir)
+                files = ['..']  # Parent directory
+                dirs = [e for e in entries if os.path.isdir(os.path.join(current_dir, e))]
+                file_list = [e for e in entries if os.path.isfile(os.path.join(current_dir, e))]
+                
+                # Apply filter if specified
+                if filter_ext:
+                    file_list = [f for f in file_list if any(f.endswith(ext) for ext in filter_ext)]
+                
+                dirs.sort()
+                file_list.sort()
+                files.extend(dirs)
+                files.extend(file_list)
+            except Exception as e:
+                files = ['..', f'Error: {e}']
+        
+        def draw_file_dialog():
+            # Border
+            write_at(stdscr, x, y, '+' + '-' * (w - 2) + '+', C_BORDER)
+            for i in range(1, h - 1):
+                write_at(stdscr, x, y + i, '|', C_BORDER)
+                write_at(stdscr, x + 1, y + i, ' ' * (w - 2), C_BG)
+                write_at(stdscr, x + w - 1, y + i, '|', C_BORDER)
+            write_at(stdscr, x, y + h - 1, '+' + '-' * (w - 2) + '+', C_BORDER)
+            
+            # Title
+            title = "Open File" if mode == 'open' else "Save File"
+            title_x = x + (w - len(title)) // 2
+            write_at(stdscr, title_x, y, f" {title} ", C_BORDER)
+            
+            # Current path
+            path_text = current_dir[-(w-4):] if len(current_dir) > w - 4 else current_dir
+            write_at(stdscr, x + 2, y + 1, path_text[:w-4], C_BORDER)
+            
+            # File list
+            for i in range(visible_rows):
+                file_idx = scroll_offset + i
+                if file_idx < len(files):
+                    fname = files[file_idx]
+                    is_dir = os.path.isdir(os.path.join(current_dir, fname)) if fname != '..' else True
+                    prefix = '/' if is_dir else ' '
+                    display = (prefix + fname)[:w-4]
+                    
+                    attr = C_ACTIVE if file_idx == cursor else C_BG
+                    write_at(stdscr, x + 2, y + 3 + i, display.ljust(w-4), attr)
+                else:
+                    write_at(stdscr, x + 2, y + 3 + i, ' ' * (w-4), C_BG)
+            
+            # Selected file
+            file_label = "File: " + selected_file
+            write_at(stdscr, x + 2, y + h - 3, file_label[:w-4], C_BG)
+            
+            # Buttons
+            btn_text = "[ OK ]  [ Cancel ]"
+            btn_x = x + (w - len(btn_text)) // 2
+            write_at(stdscr, btn_x, y + h - 2, btn_text, C_BORDER)
+            
+            stdscr.refresh()
+        
+        refresh_files()
+        
+        while True:
+            draw_file_dialog()
+            ch = stdscr.getch()
+            
+            if ch == 27:  # Escape
+                return None
+            
+            elif ch == curses.KEY_UP:
+                if cursor > 0:
+                    cursor -= 1
+                    if cursor < scroll_offset:
+                        scroll_offset = cursor
+            
+            elif ch == curses.KEY_DOWN:
+                if cursor < len(files) - 1:
+                    cursor += 1
+                    if cursor >= scroll_offset + visible_rows:
+                        scroll_offset = cursor - visible_rows + 1
+            
+            elif ch == curses.KEY_HOME:
+                cursor = 0
+                scroll_offset = 0
+            
+            elif ch == curses.KEY_END:
+                cursor = len(files) - 1
+                if cursor >= visible_rows:
+                    scroll_offset = cursor - visible_rows + 1
+            
+            elif ch in (10, 13, curses.KEY_ENTER):  # Enter
+                fname = files[cursor]
+                if fname == '..':
+                    current_dir = os.path.dirname(current_dir)
+                    refresh_files()
+                    cursor = 0
+                    scroll_offset = 0
+                elif os.path.isdir(os.path.join(current_dir, fname)):
+                    current_dir = os.path.join(current_dir, fname)
+                    refresh_files()
+                    cursor = 0
+                    scroll_offset = 0
+                else:
+                    # File selected
+                    return os.path.join(current_dir, fname)
+            
+            elif ch == ord(' '):  # Space to select file for save mode
+                if mode == 'save':
+                    fname = files[cursor]
+                    if fname != '..' and os.path.isfile(os.path.join(current_dir, fname)):
+                        selected_file = fname
+            
+            time.sleep(0.01)
+    
+    def color_picker():
+        """
+        Simple color picker dialog
+        Returns: color name string or None if cancelled
+        """
+        colors = [
+            'black', 'red', 'green', 'yellow', 
+            'blue', 'magenta', 'cyan', 'white',
+            'gray', 'light_red', 'light_green', 'light_yellow',
+            'light_blue', 'light_magenta', 'light_cyan', 'bright_white'
+        ]
+        
+        C_BORDER = C['border']
+        C_BG = C['bg']
+        C_ACTIVE = C['active_tool']
+        
+        w = 40
+        h = 14
+        x = max(0, (curses.COLS - w) // 2)
+        y = max(0, (curses.LINES - h) // 2)
+        
+        cols = 4
+        rows = 4
+        cursor = 0
+        
+        def draw_color_dialog():
+            # Border
+            write_at(stdscr, x, y, '+' + '-' * (w - 2) + '+', C_BORDER)
+            for i in range(1, h - 1):
+                write_at(stdscr, x, y + i, '|', C_BORDER)
+                write_at(stdscr, x + 1, y + i, ' ' * (w - 2), C_BG)
+                write_at(stdscr, x + w - 1, y + i, '|', C_BORDER)
+            write_at(stdscr, x, y + h - 1, '+' + '-' * (w - 2) + '+', C_BORDER)
+            
+            # Title
+            title = " Select Color "
+            title_x = x + (w - len(title)) // 2
+            write_at(stdscr, title_x, y, title, C_BORDER)
+            
+            # Color grid
+            cell_w = (w - 4) // cols
+            for i, color in enumerate(colors):
+                row = i // cols
+                col = i % cols
+                cell_x = x + 2 + col * cell_w
+                cell_y = y + 2 + row
+                
+                attr = C_ACTIVE if i == cursor else C_BG
+                display = color[:cell_w-1].center(cell_w-1)
+                write_at(stdscr, cell_x, cell_y, display, attr)
+            
+            # Preview
+            preview_text = " Preview "
+            write_at(stdscr, x + 2, y + h - 3, preview_text, C_BG)
+            
+            # Buttons
+            btn_text = "[ OK ]  [ Cancel ]"
+            btn_x = x + (w - len(btn_text)) // 2
+            write_at(stdscr, btn_x, y + h - 2, btn_text, C_BORDER)
+            
+            stdscr.refresh()
+        
+        while True:
+            draw_color_dialog()
+            ch = stdscr.getch()
+            
+            if ch == 27:  # Escape
+                return None
+            
+            elif ch == curses.KEY_UP:
+                cursor = max(0, cursor - cols)
+            
+            elif ch == curses.KEY_DOWN:
+                cursor = min(len(colors) - 1, cursor + cols)
+            
+            elif ch == curses.KEY_LEFT:
+                cursor = max(0, cursor - 1)
+            
+            elif ch == curses.KEY_RIGHT:
+                cursor = min(len(colors) - 1, cursor + 1)
+            
+            elif ch in (10, 13, curses.KEY_ENTER):
+                return colors[cursor]
+            
+            time.sleep(0.01)
+    
+    def font_dialog():
+        """
+        Simple font selection dialog
+        Returns: dict with 'size' and 'family' or None if cancelled
+        """
+        C_BORDER = C['border']
+        C_BG = C['bg']
+        C_ACTIVE = C['active_tool']
+        
+        sizes = [8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24]
+        families = ['monospace', 'serif', 'sans-serif', 'courier', 'helvetica']
+        
+        w = 50
+        h = 16
+        x = max(0, (curses.COLS - w) // 2)
+        y = max(0, (curses.LINES - h) // 2)
+        
+        selected_size = 6  # Default to 14
+        selected_family = 0
+        
+        def draw_font_dialog():
+            # Border
+            write_at(stdscr, x, y, '+' + '-' * (w - 2) + '+', C_BORDER)
+            for i in range(1, h - 1):
+                write_at(stdscr, x, y + i, '|', C_BORDER)
+                write_at(stdscr, x + 1, y + i, ' ' * (w - 2), C_BG)
+                write_at(stdscr, x + w - 1, y + i, '|', C_BORDER)
+            write_at(stdscr, x, y + h - 1, '+' + '-' * (w - 2) + '+', C_BORDER)
+            
+            # Title
+            title = " Font Selection "
+            title_x = x + (w - len(title)) // 2
+            write_at(stdscr, title_x, y, title, C_BORDER)
+            
+            # Size section
+            write_at(stdscr, x + 2, y + 2, "Size:", C_BORDER)
+            size_text = ' '.join(str(s) if i != selected_size else f'[{s}]' for i, s in enumerate(sizes))
+            write_at(stdscr, x + 8, y + 2, size_text[:w-10], C_BG)
+            
+            # Family section
+            write_at(stdscr, x + 2, y + 4, "Family:", C_BORDER)
+            for i, family in enumerate(families):
+                attr = C_ACTIVE if i == selected_family else C_BG
+                prefix = '> ' if i == selected_family else '  '
+                write_at(stdscr, x + 10, y + 5 + i, prefix + family, attr)
+            
+            # Preview
+            preview = f"Preview: Size {sizes[selected_size]}, {families[selected_family]}"
+            write_at(stdscr, x + 2, y + h - 4, preview[:w-4], C_BG)
+            
+            # Buttons
+            btn_text = "[ OK ]  [ Cancel ]"
+            btn_x = x + (w - len(btn_text)) // 2
+            write_at(stdscr, btn_x, y + h - 2, btn_text, C_BORDER)
+            
+            stdscr.refresh()
+        
+        while True:
+            draw_font_dialog()
+            ch = stdscr.getch()
+            
+            if ch == 27:  # Escape
+                return None
+            
+            elif ch == curses.KEY_UP:
+                selected_family = max(0, selected_family - 1)
+            
+            elif ch == curses.KEY_DOWN:
+                selected_family = min(len(families) - 1, selected_family + 1)
+            
+            elif ch == curses.KEY_LEFT:
+                selected_size = max(0, selected_size - 1)
+            
+            elif ch == curses.KEY_RIGHT:
+                selected_size = min(len(sizes) - 1, selected_size + 1)
+            
+            elif ch in (10, 13, curses.KEY_ENTER):
+                return {
+                    'size': sizes[selected_size],
+                    'family': families[selected_family]
+                }
+            
+            time.sleep(0.01)
+
+    def commit_edit():
+        nonlocal editing_prop, edit_buffer, selected_win_idx, selected_ctrl_idx
+        return ""
+    
+    def write_line(file_handle, text):
+        """Write a line with newline"""
+        if file_handle in run_file_handles:
+            try:
+                run_file_handles[file_handle].write(text + '\n')
+                return True
+            except Exception as e:
+                        elif run_mode:
+                            if run_globals.get('__msg__'):
+                                run_globals['__msg__'] = None 
+                                stdscr.clear()
+                            elif 18 <= mx <= 23 and my == 0:
+                                # Exit run mode - close all file handles
+                                for handle in list(run_file_handles.keys()):
+                                    close_file(handle)
+                                run_file_handles.clear()
+                                
+                                run_mode = False
+                                run_focused_ctrl = -1
+                                if design_backup is not None:
+                                    windows[0] = copy.deepcopy(design_backup)
+                                stdscr.clear()
+                return True
+            except Exception as e:
+                run_globals['__msg__'] = f"Close Error: {e}"
+                return False
+        return False
+    
+    def file_exists(filename):
+        """Check if file exists"""
+        return os.path.exists(filename)
+    
+    def create_file_dialog(mode='open', filter_ext=None):
+        """Simple file dialog for runtime"""
+        # For now, use the existing prompt_input with a simple interface
+        # In a full implementation, this would show a file browser dialog
+        if mode == 'save':
+            prompt = "Save file (enter path)"
+        else:
+            prompt = "Open file (enter path)"
+        
+        # Return the filename entered by user
+        # This is a simplified version - full implementation would have browse capability
+        return prompt_input(stdscr, prompt, C)
+
+    def commit_edit():
+        nonlocal editing_prop, edit_buffer, selected_win_idx, selected_ctrl_idx
+
+    last_click_time = 0.0
+    last_click_x = -1
+    last_click_y = -1
+                                run_mode = True
+                                run_focused_ctrl = -1
+                                stdscr.clear()
+                                run_globals = {'__msg__': None}
+                                
+                                # File I/O handle management for runtime
+                                run_file_handles = {}
+                                run_file_counter = 0
+                                run_globals['open_file'] = open_file
+                                run_globals['read_line'] = read_line
+                                run_globals['read_all'] = read_all
+                                run_globals['write_line'] = write_line
+                                run_globals['write_text'] = write_text
+                                run_globals['close_file'] = close_file
+                                run_globals['file_exists'] = file_exists
+                                run_globals['create_file_dialog'] = create_file_dialog
+                                
+                                # Add dialog functions to runtime
+                                run_globals['msgbox'] = msgbox
+                                run_globals['inputbox'] = inputbox
+                                run_globals['file_dialog'] = file_dialog
+                                run_globals['color_picker'] = color_picker
+                                run_globals['font_dialog'] = font_dialog
+                                
+                                # Add control references
+                                for w in windows:
+                                    for c in w.controls:
+                                        run_globals[c.name_id] = c
     def execute_event(event_name, form_win):
         """Execute event handler by name"""
         if event_name in run_globals:
@@ -952,27 +1622,43 @@ def main(stdscr):
                 
                 for i, win in enumerate(windows):
                     if run_mode and i != 0:
-                        continue
-                    act_idx = selected_ctrl_idx if (i == selected_win_idx and not run_mode) else -1
-                    draw_window(stdscr, win, C, box_chars, act_idx)
-                    if i == 1 and not run_mode:
-                        draw_properties(stdscr, win, windows, selected_win_idx, 
-                                     selected_ctrl_idx, editing_prop, edit_buffer, C, tools)
-
-                if run_mode and run_globals.get('__msg__'):
-                    draw_msgbox(stdscr, run_globals['__msg__'], C)
-
-                if run_mode and run_focused_ctrl >= 0:
-                    c = windows[0].controls[run_focused_ctrl]
-                    display_text = c.caption
-                    if len(display_text) >= c.w:
-                        display_text = display_text[-(c.w-1):]
-                    try:
-                        stdscr.move(windows[0].y + c.y, windows[0].x + c.x + len(display_text))
-                    except curses.error:
-                        pass
-
-            stdscr.refresh()
+                            elif 18 <= mx <= 23 and my == 0:
+                                design_backup = copy.deepcopy(windows[0])
+                                run_mode = True
+                                run_focused_ctrl = -1
+                                stdscr.clear()
+                                run_globals = {'__msg__': None}
+                                def _msgbox(text):
+                                    run_globals['__msg__'] = str(text)
+                                run_globals['msgbox'] = _msgbox
+                                
+                                # Add file I/O functions to runtime
+                                run_globals['open_file'] = open_file
+                                run_globals['read_line'] = read_line
+                                run_globals['read_all'] = read_all
+                                run_globals['write_line'] = write_line
+                                run_globals['write_text'] = write_text
+                                run_globals['close_file'] = close_file
+                                run_globals['file_exists'] = file_exists
+                                run_globals['create_file_dialog'] = create_file_dialog
+                                
+                                # Add control references
+                                for w in windows:
+                                    for c in w.controls:
+                                        run_globals[c.name_id] = c
+                                
+                                # Fire on_load event
+                                execute_event("on_load_form", windows[0])
+                                
+                                # Compile and execute control code
+                                for w in windows:
+                                    for c in w.controls:
+                                        if c.code:
+                                            try:
+                                                exec(c.code, run_globals)
+                                            except Exception as e:
+                                                _msgbox(f"Compile Error in {c.name_id}:\n{e}")
+                                clicked_handled = True
             last_draw = current_time
 
         # Input handling

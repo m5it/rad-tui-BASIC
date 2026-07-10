@@ -1,50 +1,47 @@
-# Plan: RAD-TUI: VB1 for MS-DOS on Linux - Update & Porting Plan
-## ID: 1783669453.9715493
-## Created: 2026-07-10 07:44:13
+# Plan: VB1-DOS Clone v2.1.0 Development Plan
+## ID: 1783673542.3881872
+## Created: 2026-07-10 08:52:22
 ## Status: in_progress
 
 ### Goal:
-Modernize and enhance the RAD-TUI visual IDE to bring more VB1-for-MS-DOS functionality to Linux. Focus on feature parity, cross-compatibility between Python and FreeBASIC implementations, and adding missing classic VB features.
+Create version 2.1.0 with advanced features: multi-line text editor, file I/O operations, common dialogs, grid control, and clipboard operations. Focus on making the runtime environment more complete for real application development.
 
-### Tasks (13):
-1. [pending] Analyze Current Implementation Gap Analysis
-   ID: 1783669453.971711
+### Tasks (12):
+1. [pending] Design Multi-line Text Editor Control
+   ID: 1783673546.4903011
 
-2. [pending] Design Project Format v2 Specification
-   ID: 1783669453.9718366
+2. [pending] Implement File I/O Functions
+   ID: 1783673552.0486674
 
-3. [pending] Implement File Menu in FreeBASIC Version
-   ID: 1783669453.973003
+3. [pending] Create Common Dialog System
+   ID: 1783673556.158511
 
-4. [pending] Add Code Editor to FreeBASIC Version
-   ID: 1783669453.973197
+4. [pending] Build Grid Control for Data Display
+   ID: 1783673561.1297555
 
-5. [pending] Implement Runtime Mode in FreeBASIC
-   ID: 1783669453.9733784
+5. [pending] Implement Clipboard Operations
+   ID: 1783673703.767045
 
-6. [pending] Add Missing Control Types - Phase 1
-   ID: 1783669453.9735265
+6. [pending] Add Print and Print Preview Support
+   ID: 1783673707.7030652
 
-7. [pending] Add Missing Control Types - Phase 2
-   ID: 1783669453.9736233
+7. [pending] Create Application Templates and Wizards
+   ID: 1783673711.3348384
 
-8. [pending] Add Missing Control Types - Phase 3
-   ID: 1783669453.9737234
+8. [pending] Implement Drag and Drop Between Controls
+   ID: 1783673716.2581544
 
-9. [pending] Implement Menu Designer
-   ID: 1783669453.9738245
+9. [pending] Add Image/Picture Support
+   ID: 1783673720.9786723
 
-10. [pending] Add Additional Event Types
-   ID: 1783669453.9739432
+10. [pending] Enhance Runtime Debugging
+   ID: 1783673724.9221087
 
-11. [pending] Create Example Projects Suite
-   ID: 1783669453.9740608
+11. [pending] Update Documentation for v2.1.0
+   ID: 1783673729.5475612
 
-12. [pending] Write Comprehensive Documentation
-   ID: 1783669453.9741776
-
-13. [pending] Cross-Platform Testing & Bug Fixes
-   ID: 1783669453.9742963
+12. [pending] Create Example Applications for v2.1.0
+   ID: 1783673733.282078
 
 ---
 
