@@ -86,7 +86,7 @@ RAD-TUI recreates the magic of early 90s visual programming environments like VB
 
 ```
 radtui/
-├── rad-tui-py.py              # Python/curses implementation
+├── rad-tui-py.py              # Python v2.2 runtime + project shell (25 controls, DB/Network/Regex/Dialogs)
 ├── rad-tui-py-compat.py       # Terminal-compatible version
 ├── rad-tui-BASIC.bas          # FreeBASIC implementation
 ├── examples/                  # Example projects (18 total)
@@ -112,24 +112,26 @@ radtui/
 │   ├── ROADMAP_V22.md         # v2.2.0 roadmap
 │   ├── HISTORY_V22.md         # v2.2.0 release notes
 │   └── ...                    # Additional guides
-├── src/                       # Source modules
-│   ├── treeview.py            # TreeView control (v2.2.0)
-│   ├── tabcontrol.py          # TabControl (v2.2.0)
-│   ├── progressbar.py         # ProgressBar (v2.2.0)
-│   ├── slider.py              # Slider (v2.2.0)
-│   ├── toolbar.py             # Toolbar (v2.2.0)
-│   ├── statusbar.py           # StatusBar (v2.2.0)
-│   ├── splitter.py            # Splitter (v2.2.0)
-│   ├── colorpicker.py         # ColorPicker (v2.2.0)
-│   ├── chart.py               # Chart (v2.2.0)
-│   ├── database.py            # Database module (v2.2.0)
-│   ├── network.py             # Network module (v2.2.0)
-│   ├── regex.py               # Regex module (v2.2.0)
-│   ├── custom_dialog.py       # Dialogs (v2.2.0)
-│   ├── templates.py           # Template system
-│   ├── dragdrop.py            # Drag and drop
-│   ├── image_display.py       # Image display
-│   └── debugger.py            # Runtime debugger
+├── src/                       # Source modules (v2.2)
+│   ├── treeview.py            # TreeView control
+│   ├── tabcontrol.py          # TabControl
+│   ├── progressbar.py         # ProgressBar
+│   ├── slider.py              # Slider
+│   ├── toolbar.py             # Toolbar
+│   ├── statusbar.py           # StatusBar
+│   ├── splitter.py            # Splitter
+│   ├── colorpicker.py         # ColorPicker
+│   ├── chart.py               # Chart
+│   ├── database.py            # Database module
+│   ├── network.py             # Network module
+│   ├── regex.py               # Regex module
+│   ├── custom_dialog.py       # Dialogs
+│   ├── tui_runner.py          # Curses form runner
+│   └── ...                    # + legacy modules at repo root (old/)
+├── old/                       # Archived legacy implementations
+│   ├── rad-tui-py.py          # Pre-v2.2 designer (unfinished)
+│   ├── rad-tui-py-v21*.py     # v2.1 variants
+│   └── *.backup               # Backups
 ├── tests/                     # Testing utilities
 ├── HISTORY.md                 # Version history
 ├── HISTORY_V22.md           # Detailed v2.2.0 notes
@@ -141,18 +143,19 @@ radtui/
 ### Python Version (Recommended)
 
 ```bash
-# Standard version
+# Interactive project shell
 python3 rad-tui-py.py
 
-# v2.2 project shell / curses form runner
-python3 rad-tui-py-v22.py
-
 # Launch an example form immediately
-python3 rad-tui-py-v22.py --run examples/file_explorer_v22.json
+python3 rad-tui-py.py --run examples/file_explorer_v22.json
 
 # List examples or run without a terminal
-python3 rad-tui-py-v22.py --list-examples
-python3 rad-tui-py-v22.py --run --headless examples/chart_viewer.json
+python3 rad-tui-py.py --list-examples
+python3 rad-tui-py.py --run --headless examples/chart_viewer.json
+
+# Inside the shell you can also use:
+#   RAD-TUI> open examples/calculator.json
+#   RAD-TUI> run
 
 # Terminal-compatible version
 python3 rad-tui-py-compat.py
