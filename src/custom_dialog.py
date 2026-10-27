@@ -127,7 +127,19 @@ class CustomDialog:
         """Extract values from controls into values dict"""
         self.values = {}
         for control in self.controls:
-            if hasattr(control, 'name_id') and hasattr(control, 'caption'):
+            if not hasattr(control, 'name_id'):
+                continue
+            if hasattr(control, 'checked'):
+                self.values[control.name_id] = bool(control.checked)
+            elif getattr(control, 'items', None) and getattr(control, 'selected_index', -1) >= 0:
+                index = control.selected_index
+                if 0 <= index < len(control.items):
+                    self.values[control.name_id] = control.items[index]
+                else:
+                    self.values[control.name_id] = control.caption
+            elif hasattr(control, 'text') and control.text:
+                self.values[control.name_id] = control.text
+            elif hasattr(control, 'caption'):
                 self.values[control.name_id] = control.caption
                 
     def get_values(self) -> Dict[str, Any]:

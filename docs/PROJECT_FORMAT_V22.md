@@ -418,13 +418,17 @@ Additional properties:
 
 ## Code Section
 
-Event handlers are stored as strings with escaped newlines:
+Event handlers are stored as JSON strings with normal JSON escaping. Use `\n`
+for a newline in the actual JSON file (a single backslash, not `\\n`):
 
 ```json
 {
-  "code": "def on_load_frmMain():\\n    initialize()\\n\\ndef on_click_btnSubmit():\\n    submit_form()\\n"
+  "code": "def on_load_frmMain():\n    initialize()\n\ndef on_click_btnSubmit():\n    submit_form()\n"
 }
 ```
+
+The loader also accepts legacy projects that were written with double-escaped
+newlines (`\\n`) and repairs them on load.
 
 ### Event Handler Naming Convention
 

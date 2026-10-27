@@ -8,6 +8,8 @@ Toolbar, StatusBar, Splitter, ColorPicker, Chart, Database, Network, Regex, Cust
 Copyright (c) 2024
 """
 
+import argparse
+import glob
 import os
 import sys
 import json
@@ -785,48 +787,61 @@ class Control:
         self.tab_order = 0
         self.parent = None
 
+def _apply_control_kwargs(control, kwargs):
+    """Apply optional constructor properties used by dynamic dialog code."""
+    for key, value in kwargs.items():
+        setattr(control, key, value)
+
+
 class Label(Control):
-    def __init__(self, name_id="", x=0, y=0, width=10):
+    def __init__(self, name_id="", x=0, y=0, width=10, **kwargs):
         super().__init__(name_id, x, y, width, 1)
         self.alignment = "left"
+        _apply_control_kwargs(self, kwargs)
 
 class Button(Control):
-    def __init__(self, name_id="", x=0, y=0, width=10):
+    def __init__(self, name_id="", x=0, y=0, width=10, **kwargs):
         super().__init__(name_id, x, y, width, 1)
         self.default = False
         self.cancel = False
+        _apply_control_kwargs(self, kwargs)
 
 class TextBox(Control):
-    def __init__(self, name_id="", x=0, y=0, width=20):
+    def __init__(self, name_id="", x=0, y=0, width=20, **kwargs):
         super().__init__(name_id, x, y, width, 1)
         self.text = ""
         self.password_char = ""
         self.max_length = 0
+        _apply_control_kwargs(self, kwargs)
 
 class CheckBox(Control):
-    def __init__(self, name_id="", x=0, y=0, width=20):
+    def __init__(self, name_id="", x=0, y=0, width=20, **kwargs):
         super().__init__(name_id, x, y, width, 1)
         self.checked = False
+        _apply_control_kwargs(self, kwargs)
 
 class RadioButton(Control):
-    def __init__(self, name_id="", x=0, y=0, width=20):
+    def __init__(self, name_id="", x=0, y=0, width=20, **kwargs):
         super().__init__(name_id, x, y, width, 1)
         self.checked = False
         self.group = 0
+        _apply_control_kwargs(self, kwargs)
 
 class ListBox(Control):
-    def __init__(self, name_id="", x=0, y=0, width=20, height=5):
+    def __init__(self, name_id="", x=0, y=0, width=20, height=5, **kwargs):
         super().__init__(name_id, x, y, width, height)
         self.items = []
         self.selected_index = -1
         self.multi_select = False
+        _apply_control_kwargs(self, kwargs)
 
 class ComboBox(Control):
-    def __init__(self, name_id="", x=0, y=0, width=20):
+    def __init__(self, name_id="", x=0, y=0, width=20, **kwargs):
         super().__init__(name_id, x, y, width, 1)
         self.items = []
         self.selected_index = -1
         self.drop_down_count = 8
+        _apply_control_kwargs(self, kwargs)
 
 class Frame(Control):
     def __init__(self, name_id="", x=0, y=0, width=30, height=10):
@@ -843,6 +858,67 @@ class Image(Control):
         super().__init__(name_id, x, y, width, height)
         self.image_path = ""
         self.stretch = False
+
+class PictureBox(Control):
+    """Image/ASCII-art display used by the legacy image examples."""
+    def __init__(self, name_id="", x=0, y=0, width=10, height=5):
+        super().__init__(name_id, x, y, width, height)
+        self.image_list = None
+        self.image = None
+
+    def set_image(self, image):
+        self.image = image
+        return image
+
+
+class ASCIIImage:
+    """Small ASCII image object used by examples/image_viewer.json."""
+    def __init__(self):
+        self.pixels = []
+        self.width = 0
+        self.height = 0
+
+    def load_from_file(self, path):
+        try:
+            with open(path, "r") as handle:
+                lines = handle.read().splitlines()
+        except Exception:
+            return False
+        self.pixels = [list(line) for line in lines]
+        self.height = len(self.pixels)
+        self.width = max((len(row) for row in self.pixels), default=0)
+        for row in self.pixels:
+            while len(row) < self.width:
+                row.append(" ")
+        return True
+
+
+class ImageList:
+    """Minimal image collection with the frame-navigation API examples use."""
+    def __init__(self):
+        self.images = []
+        self.current_index = 0
+
+    def add_image(self, image):
+        self.images.append(image)
+        return image
+
+    def get_current(self):
+        if not self.images:
+            return None
+        self.current_index = max(0, min(self.current_index, len(self.images) - 1))
+        return self.images[self.current_index]
+
+    def next_frame(self):
+        if self.images:
+            self.current_index = (self.current_index + 1) % len(self.images)
+        return self.get_current()
+
+    def prev_frame(self):
+        if self.images:
+            self.current_index = (self.current_index - 1) % len(self.images)
+        return self.get_current()
+
 
 class Grid(Control):
     def __init__(self, name_id="", x=0, y=0, width=40, height=10):
@@ -930,7 +1006,7 @@ def create_control(tool_type, x, y, name_id=""):
     elif tool_type == 11:
         return Image(name_id=name_id or "img", x=x, y=y)
     elif tool_type in [12, 13]:
-        return Control(name_id=name_id or "mnu")  # Menu/PopupMenu
+        return PictureBox(name_id=name_id or "pic", x=x, y=y)  # image/menu composite
     elif tool_type == 14:
         return Edit(name_id=name_id or "edt", x=x, y=y)
     elif tool_type == 15:
@@ -964,6 +1040,68 @@ def create_control(tool_type, x, y, name_id=""):
 # PROJECT LOADER (with backward compatibility)
 # =============================================================================
 
+def _unescape_code(code):
+    """Turn literal \\n/\\t/\\r escapes into real characters.
+
+    Older project files (and the v2.2 format docs) store code with the
+    newlines escaped twice, so json.load leaves literal backslash-n
+    sequences in the string.  Decode them without touching other escapes.
+    """
+    out = []
+    i = 0
+    while i < len(code):
+        ch = code[i]
+        if ch == '\\' and i + 1 < len(code):
+            nxt = code[i + 1]
+            if nxt == 'n':
+                out.append('\n')
+                i += 2
+                continue
+            if nxt == 'r':
+                out.append('\r')
+                i += 2
+                continue
+            if nxt == 't':
+                out.append('\t')
+                i += 2
+                continue
+            if nxt in ('\\', '"', "'"):
+                out.append(nxt)
+                i += 2
+                continue
+        out.append(ch)
+        i += 1
+    return ''.join(out)
+
+
+def _normalize_code(code):
+    """Repair legacy double-escaped code fields when necessary."""
+    if not isinstance(code, str) or not code:
+        return code
+    if '\n' in code:
+        return code
+    if '\\n' not in code and '\\t' not in code and '\\r' not in code:
+        return code
+    try:
+        compile(code, '<project>', 'exec')
+    except SyntaxError:
+        return _unescape_code(code)
+    return code
+
+
+def _normalize_code_fields(obj):
+    """Walk a project structure and normalize every ``code`` field."""
+    if isinstance(obj, dict):
+        for key, value in obj.items():
+            if key == 'code' and isinstance(value, str):
+                obj[key] = _normalize_code(value)
+            else:
+                _normalize_code_fields(value)
+    elif isinstance(obj, list):
+        for item in obj:
+            _normalize_code_fields(item)
+
+
 def load_project(filepath):
     """Load project from JSON file with version handling"""
     with open(filepath, 'r') as f:
@@ -977,6 +1115,9 @@ def load_project(filepath):
     if version == '2.1.0':
         project['version'] = '2.2.0'
         # Ensure backward compatibility - no conversion needed for basic controls
+
+    # Repair code fields written with escaped newlines (legacy v2.2 files)
+    _normalize_code_fields(project)
     
     return project
 
@@ -990,6 +1131,105 @@ def save_project(filepath, project):
 # RUNTIME ENVIRONMENT (with v2.2.0 functions)
 # =============================================================================
 
+class FormInfo:
+    """Small object exposed to project code as ``frmMain``."""
+    def __init__(self, x=0, y=0, w=70, h=20, title=""):
+        self.x = x
+        self.y = y
+        self.w = w
+        self.h = h
+        self.width = w
+        self.height = h
+        self.title = title
+
+
+class RuntimeDialog:
+    """Adapter that routes the v2.2 dialog helper factories through the UI."""
+
+    def __init__(self, runtime, kind, title, prompt="", default="", items=None):
+        self.runtime = runtime
+        self.kind = kind
+        self.title = title
+        self.prompt = prompt
+        self.default = default
+        self.items = list(items or [])
+        self.result = DialogResult.NONE
+        self.values = {}
+        self.visible = False
+
+    def show_dialog(self, modal=True, parent_x=0, parent_y=0,
+                    parent_width=80, parent_height=24):
+        ui = self.runtime.ui
+        if self.kind == "input":
+            if ui is not None:
+                value = ui.input_box(self.prompt, self.title, self.default)
+            else:
+                print(f"\n[{self.title}]")
+                print(self.prompt)
+                value = input(f"Default: {self.default}\n> " if self.default else "> ")
+            if value is None:
+                self.result = DialogResult.CANCEL
+            else:
+                self.values["input"] = value
+                self.result = DialogResult.OK
+        elif self.kind == "confirm":
+            if ui is not None:
+                answer = ui.confirm_dialog(self.prompt, self.title)
+            else:
+                print(f"\n[{self.title}]")
+                print(self.prompt)
+                answer = input("(y/n): ").strip().lower() in ("y", "yes")
+            self.result = DialogResult.YES if answer else DialogResult.NO
+        elif self.kind == "list":
+            if ui is not None:
+                value = ui.list_dialog(self.items, self.title)
+            else:
+                print(f"\n[{self.title}]")
+                for index, item in enumerate(self.items, 1):
+                    print(f"  {index}. {item}")
+                try:
+                    value = self.items[int(input("Number: ")) - 1]
+                except (ValueError, IndexError):
+                    value = None
+            if value is None:
+                self.result = DialogResult.CANCEL
+            else:
+                self.values["selection"] = value
+                self.result = DialogResult.OK
+        else:
+            self.result = DialogResult.OK
+        return self.result
+
+    def get_value(self, name):
+        return self.values.get(name)
+
+    def get_values(self):
+        return dict(self.values)
+
+    def set_value(self, name, value):
+        self.values[name] = value
+
+    def close_dialog(self, result=None):
+        if result is not None:
+            self.result = result
+        self.visible = False
+
+
+class RuntimeCustomDialog(CustomDialog):
+    """CustomDialog variant that asks the active UI to render itself."""
+
+    ui = None
+
+    def show_dialog(self, modal=True, parent_x=0, parent_y=0,
+                    parent_width=80, parent_height=24):
+        super().show_dialog(modal, parent_x, parent_y,
+                            parent_width, parent_height)
+        ui = RuntimeCustomDialog.ui
+        if ui is None:
+            return self.result
+        return ui.custom_dialog(self)
+
+
 class RuntimeEnvironment:
     """Runtime environment for executing RAD-TUI applications"""
     
@@ -998,6 +1238,10 @@ class RuntimeEnvironment:
         self.controls = {}
         self.event_handlers = {}
         self.running = False
+        self.ui = None
+        self.last_error = None
+        self.exit_requested = False
+        self.clipboard = ""
         
         # Initialize built-in functions
         self.init_builtins()
@@ -1039,17 +1283,92 @@ class RuntimeEnvironment:
             'read_line': self.builtin_read_line,
             'write_line': self.builtin_write_line,
             'close_file': self.builtin_close_file,
+            'end_app': self.builtin_end_app,
+            'inputbox': self.builtin_input_box,
+            'file_exists': os.path.exists,
+            'file_size': self.builtin_file_size,
+            'list_files': self.builtin_list_files,
+            'split': lambda text, sep=None: text.split(sep) if sep is not None else text.split(),
+            'join': lambda items, sep: sep.join(str(item) for item in items),
+            'clipboard_set': self.builtin_clipboard_set,
+            'clipboard_get': self.builtin_clipboard_get,
+            'expand_all_nodes': self.builtin_expand_all_nodes,
+            'collapse_all_nodes': self.builtin_collapse_all_nodes,
+            'is_valid_url': lambda url: bool(urllib.parse.urlparse(url).scheme and urllib.parse.urlparse(url).netloc),
+            'exit': self.builtin_end_app,
+            'true': True,
+            'false': False,
+            'null': None,
         })
         
-        # Add v2.2.0 built-ins
+        # Add v2.2.0 built-ins and control classes used by dialog code
         self.builtins.update(V22_BUILTINS)
+        self.builtins.update({
+            'Label': Label,
+            'Button': Button,
+            'TextBox': TextBox,
+            'CheckBox': CheckBox,
+            'RadioButton': RadioButton,
+            'ListBox': ListBox,
+            'ComboBox': ComboBox,
+            'Frame': Frame,
+            'Image': Image,
+            'PictureBox': PictureBox,
+            'ASCIIImage': ASCIIImage,
+            'ImageList': ImageList,
+            'Edit': Edit,
+            'Memo': Memo,
+            'Grid': Grid,
+            'TreeView': TreeView,
+            'TabControl': TabControl,
+            'ProgressBar': ProgressBar,
+            'Slider': Slider,
+            'Toolbar': Toolbar,
+            'StatusBar': StatusBar,
+            'Splitter': Splitter,
+            'ColorPicker': ColorPicker,
+            'Chart': Chart,
+            'CustomDialog': RuntimeCustomDialog,
+        })
+
+        # Route the dialog helper factories through the curses runner (or the
+        # text fallback) instead of the skeletal CustomDialog implementation.
+        self.builtins.update({
+            'create_input_dialog': lambda title, prompt, default="": RuntimeDialog(
+                self, "input", title, prompt, default),
+            'create_confirm_dialog': lambda title, message, yes_no=False: RuntimeDialog(
+                self, "confirm", title, message),
+            'create_list_dialog': lambda title, items, multi_select=False: RuntimeDialog(
+                self, "list", title, items=items),
+            'create_progress_dialog': lambda title, message="Please wait...": RuntimeDialog(
+                self, "progress", title, message),
+        })
         
-    def builtin_msgbox(self, text, title="Message"):
+    def builtin_msgbox(self, text, title="Message", style=None):
+        """Show a message box.  ``style`` may be yesno/yesnocancel."""
+        style = (style or "").lower()
+        if style in ("yesno", "yesnocancel", "okcancel"):
+            if self.ui is not None:
+                if style == "yesnocancel":
+                    return self.ui.option_dialog(
+                        text, title,
+                        [("Yes", "yes"), ("No", "no"), ("Cancel", "cancel")],
+                    )
+                answer = self.ui.confirm_dialog(text, title)
+                return "yes" if answer else "no"
+            print(f"\n[{title}]")
+            print(text)
+            response = input("(yes/no): ").strip().lower()
+            return "yes" if response in ("y", "yes") else "no"
+        if self.ui is not None:
+            return self.ui.msgbox(text, title)
         print(f"\n[{title}]")
         print(text)
         input("Press Enter to continue...")
         
     def builtin_input_box(self, prompt, title="Input", default=""):
+        if self.ui is not None:
+            return self.ui.input_box(prompt, title, default)
         print(f"\n[{title}]")
         if default:
             print(f"Default: {default}")
@@ -1057,12 +1376,16 @@ class RuntimeEnvironment:
         return result if result else default
         
     def builtin_confirm_dialog(self, text, title="Confirm"):
+        if self.ui is not None:
+            return self.ui.confirm_dialog(text, title)
         print(f"\n[{title}]")
         print(text)
         response = input("(y/n): ").lower()
         return response in ['y', 'yes']
         
     def builtin_file_dialog(self, mode="open", filters=None):
+        if self.ui is not None:
+            return self.ui.file_dialog(mode, filters)
         return input(f"Enter file path ({mode}): ")
         
     def builtin_open_file(self, path, mode="r"):
@@ -1084,15 +1407,64 @@ class RuntimeEnvironment:
     def builtin_close_file(self, handle):
         if handle:
             handle.close()
+
+    def builtin_end_app(self):
+        """Request that the current application window close."""
+        self.exit_requested = True
+        self.running = False
+        if self.ui is not None:
+            self.ui.running = False
+
+    def builtin_file_size(self, path):
+        try:
+            return os.path.getsize(path)
+        except OSError:
+            return -1
+
+    def builtin_list_files(self, path=".", pattern="*"):
+        try:
+            return sorted(
+                os.path.basename(item)
+                for item in glob.glob(os.path.join(path, pattern))
+            )
+        except OSError:
+            return []
+
+    def builtin_clipboard_set(self, text):
+        self.clipboard = str(text)
+
+    def builtin_clipboard_get(self):
+        return self.clipboard
+
+    def builtin_expand_all_nodes(self, tree):
+        for root in getattr(tree, "root_nodes", []):
+            self._set_node_expanded(root, True)
+        update = getattr(tree, "_update_visible_nodes", None)
+        if callable(update):
+            update()
+
+    def builtin_collapse_all_nodes(self, tree):
+        for root in getattr(tree, "root_nodes", []):
+            self._set_node_expanded(root, False)
+        update = getattr(tree, "_update_visible_nodes", None)
+        if callable(update):
+            update()
+
+    def _set_node_expanded(self, node, expanded):
+        node.expanded = expanded
+        for child in getattr(node, "children", []):
+            self._set_node_expanded(child, expanded)
             
     def execute_code(self, code):
         """Execute user code with access to built-ins"""
+        self.last_error = None
         try:
             # Create execution namespace
             namespace = {
                 '__name__': '__main__',
                 'controls': self.controls,
             }
+            namespace.update(self.controls)
             namespace.update(self.builtins)
             namespace.update(self.variables)
             
@@ -1104,12 +1476,15 @@ class RuntimeEnvironment:
                     self.variables[key] = value
                     
         except Exception as e:
-            print(f"Runtime error: {e}")
+            self.last_error = f"Runtime error: {e}"
+            if self.ui is None:
+                print(self.last_error)
             
     def register_control(self, control):
         """Register a control for runtime access"""
         if control.name_id:
             self.controls[control.name_id] = control
+            self.variables[control.name_id] = control
             
     def get_control(self, name_id):
         """Get control by name_id"""
@@ -1166,42 +1541,153 @@ class RAD_TUI_App:
             print(f"Error saving project: {e}")
             return False
             
-    def run_project(self):
-        """Execute the current project"""
+    def _can_run_tui(self):
+        """Return True when curses can use the current terminal."""
+        return (
+            sys.stdin.isatty()
+            and sys.stdout.isatty()
+            and os.environ.get('TERM') not in (None, '', 'dumb')
+        )
+
+    def prepare_project(self):
+        """Create runtime controls, execute project code and fire on_load."""
         if not self.project:
             print("No project loaded")
-            return
-            
-        print(f"\n{'='*60}")
-        print(f"Running: {self.project.get('title', 'Untitled')}")
-        print(f"{'='*60}\n")
-        
-        # Register controls
+            return False
+
         self.runtime.controls = {}
-        for ctrl_data in self.project.get('controls', []):
+        self.runtime.variables = {}
+        self.runtime.last_error = None
+        self.runtime.exit_requested = False
+        self.runtime.running = True
+
+        project = self.project
+        form = FormInfo(
+            project.get('x', 0),
+            project.get('y', 0),
+            project.get('w', 70),
+            project.get('h', 20),
+            project.get('title', ''),
+        )
+        self.runtime.variables['frmMain'] = form
+
+        for ctrl_data in project.get('controls', []):
             tool_type = ctrl_data.get('tool_type', 1)
             name_id = ctrl_data.get('name_id', '')
             x = ctrl_data.get('x', 0)
             y = ctrl_data.get('y', 0)
-            
+
             control = create_control(tool_type, x, y, name_id)
-            if control:
-                # Set additional properties
-                for key, value in ctrl_data.items():
-                    if hasattr(control, key) and key not in ['tool_type']:
-                        setattr(control, key, value)
-                self.runtime.register_control(control)
-        
-        # Execute code
-        code = self.project.get('code', '')
-        if code:
-            self.runtime.execute_code(code)
-        else:
-            print("No code to execute")
-            
-        print(f"\n{'='*60}")
-        print("Execution complete")
-        print(f"{'='*60}\n")
+            if not control:
+                continue
+
+            width = ctrl_data.get('w', getattr(control, 'width', 10))
+            height = ctrl_data.get('h', getattr(control, 'height', 1))
+            control.tool_type = int(tool_type)
+            control.width = max(1, int(width))
+            control.height = max(1, int(height))
+            control.w = control.width
+            control.h = control.height
+            control._json = ctrl_data
+
+            for key, value in ctrl_data.items():
+                if key in ('tool_type', 'w', 'h'):
+                    continue
+                if key == 'panels' and hasattr(control, 'add_panel'):
+                    for panel_data in value or []:
+                        panel = control.add_panel(
+                            panel_data.get('text', ''),
+                            panel_data.get('width', 10),
+                            panel_data.get('auto_size', 0),
+                        )
+                        for pkey, pvalue in panel_data.items():
+                            if pkey not in ('text', 'width', 'auto_size') and hasattr(panel, pkey):
+                                setattr(panel, pkey, pvalue)
+                    continue
+                if key == 'tabs' and hasattr(control, 'add_tab'):
+                    for tab_data in value or []:
+                        tab = control.add_tab(
+                            tab_data.get('caption', 'Tab'),
+                            tab_data.get('name_id', ''),
+                        )
+                        for tkey, tvalue in tab_data.items():
+                            if tkey not in ('caption', 'name_id') and hasattr(tab, tkey):
+                                setattr(tab, tkey, tvalue)
+                    continue
+                if key in ('current_color', 'color') and hasattr(control, 'set_color'):
+                    control.set_color(value)
+                    continue
+                try:
+                    setattr(control, key, value)
+                except Exception:
+                    pass
+
+            self.runtime.register_control(control)
+
+        # Execute the project code and every control's code in one namespace,
+        # so handlers can see each other and all controls.
+        code_sections = []
+        project_code = project.get('code', '')
+        if project_code:
+            code_sections.append(project_code)
+        for control in self.runtime.controls.values():
+            control_code = getattr(control, 'code', '')
+            if control_code:
+                code_sections.append(control_code)
+
+        if code_sections:
+            self.runtime.execute_code("\n\n".join(code_sections))
+
+        # Fire the form's load handler, following the documented convention
+        for handler_name in ('on_load_frmMain', 'on_load_form'):
+            handler = self.runtime.variables.get(handler_name)
+            if callable(handler):
+                try:
+                    handler()
+                except Exception as e:
+                    self.runtime.last_error = f"Runtime error in {handler_name}: {e}"
+                break
+        return True
+
+    def run_project(self, headless=False):
+        """Open the current project in a curses window (or run headlessly)."""
+        if not self.project:
+            print("No project loaded")
+            return
+
+        if headless or not self._can_run_tui():
+            self.runtime.ui = None
+            self.prepare_project()
+            print(f"\n{'='*60}")
+            print(f"Running: {self.project.get('title', 'Untitled')} (headless)")
+            print(f"{'='*60}\n")
+            if self.runtime.last_error:
+                print(self.runtime.last_error)
+            else:
+                print(f"Controls: {len(self.runtime.controls)}")
+                print("Execution complete")
+            print(f"{'='*60}\n")
+            return
+
+        try:
+            from tui_runner import ProjectRunner
+        except Exception as e:
+            print(f"Unable to load the TUI runner: {e}")
+            return
+
+        runner = ProjectRunner(self.project, self.runtime)
+        self.runtime.ui = runner
+        RuntimeCustomDialog.ui = runner
+        try:
+            curses.wrapper(lambda screen: runner.run(screen, self.prepare_project))
+        except KeyboardInterrupt:
+            pass
+        except Exception as e:
+            print(f"Unable to start the TUI: {e}")
+        finally:
+            self.runtime.ui = None
+            RuntimeCustomDialog.ui = None
+            self.runtime.exit_requested = False
 
 # =============================================================================
 # COMMAND LINE INTERFACE
@@ -1226,54 +1712,116 @@ def print_banner():
 
 def print_help():
     print("""
-Commands:
+Interactive commands:
   new              Create new project
   open <file>      Open project file
   save <file>      Save project file
-  run              Run current project
+  run              Open the current project in a TUI window
   tools            List available controls
   exit             Exit application
+
+Command line:
+  python3 rad-tui-py-v22.py --help
+  python3 rad-tui-py-v22.py --version
+  python3 rad-tui-py-v22.py --list-examples
+  python3 rad-tui-py-v22.py examples/file_explorer_v22.json
+  python3 rad-tui-py-v22.py --run examples/file_explorer_v22.json
+  python3 rad-tui-py-v22.py --run --headless examples/file_explorer_v22.json
+
+Inside a running form:
+  Mouse            Click menus, buttons, lists, grids and trees
+  Tab / Shift-Tab  Move focus
+  Enter / Space    Activate the focused control
+  Esc              Close the form or cancel a dialog
 
 Control Types:
   v2.1.0: 1-16 (Label, Button, TextBox, etc.)
   v2.2.0: 17-25 (TreeView, TabControl, Chart, etc.)
 """)
 
-def main():
-    print_banner()
-    
+
+def list_examples():
+    examples_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'examples')
+    if not os.path.isdir(examples_dir):
+        print(f"Examples directory not found: {examples_dir}")
+        return
+    for name in sorted(os.listdir(examples_dir)):
+        if not name.endswith('.json'):
+            continue
+        path = os.path.join(examples_dir, name)
+        try:
+            with open(path, 'r') as handle:
+                title = json.load(handle).get('title', 'Untitled')
+        except Exception:
+            title = '(invalid JSON)'
+        print(f"{os.path.join('examples', name):<45} {title}")
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(
+        prog='rad-tui-py-v22.py',
+        description='RAD-TUI v2.2 project shell and curses form runner.',
+    )
+    parser.add_argument('project', nargs='?', help='project JSON file to open')
+    parser.add_argument('-r', '--run', action='store_true',
+                        help='open the project and start its form immediately')
+    parser.add_argument('--headless', action='store_true',
+                        help='execute the project code without starting the TUI')
+    parser.add_argument('--list-examples', action='store_true',
+                        help='list the example projects and exit')
+    parser.add_argument('--version', action='version',
+                        version=f'RAD-TUI Python Edition v{VERSION}')
+    args = parser.parse_args(argv)
+
+    if args.list_examples:
+        list_examples()
+        return 0
+
+    if args.run and not args.project:
+        parser.error('--run requires a project file')
+
     app = RAD_TUI_App()
-    app.new_project()
-    
+
+    if args.project:
+        if not app.open_project(args.project):
+            return 1
+        if args.run or args.headless:
+            app.run_project(headless=args.headless)
+            return 0
+        print_banner()
+    else:
+        print_banner()
+        app.new_project()
+
     while True:
         try:
             cmd = input("RAD-TUI> ").strip().split()
             if not cmd:
                 continue
-                
+
             action = cmd[0].lower()
-            
-            if action == 'exit' or action == 'quit':
+
+            if action in ('exit', 'quit'):
                 break
-                
+
             elif action == 'new':
                 app.new_project()
-                
+
             elif action == 'open':
                 if len(cmd) > 1:
                     app.open_project(cmd[1])
                 else:
                     print("Usage: open <filepath>")
-                    
+
             elif action == 'save':
                 if len(cmd) > 1:
                     app.save_project(cmd[1])
                 else:
                     print("Usage: save <filepath>")
-                    
+
             elif action == 'run':
                 app.run_project()
-                
+
             elif action == 'tools':
                 print("\nAvailable Controls:")
                 print("-" * 60)
@@ -1283,20 +1831,25 @@ def main():
                     version = "v2.2" if tool_type >= 17 else "v2.1"
                     print(f"{tool_type:<6} {name:<15} {prefix:<8} {desc} [{version}]")
                 print("-" * 60)
-                
+
             elif action == 'help':
                 print_help()
-                
+
             else:
                 print(f"Unknown command: {action}")
                 print("Type 'help' for available commands")
-                
+
+        except EOFError:
+            print()
+            break
         except KeyboardInterrupt:
             print("\nUse 'exit' to quit")
         except Exception as e:
             print(f"Error: {e}")
-    
+
     print("Goodbye!")
+    return 0
+
 
 if __name__ == '__main__':
-    main()
+    raise SystemExit(main())

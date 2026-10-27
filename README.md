@@ -144,6 +144,16 @@ radtui/
 # Standard version
 python3 rad-tui-py.py
 
+# v2.2 project shell / curses form runner
+python3 rad-tui-py-v22.py
+
+# Launch an example form immediately
+python3 rad-tui-py-v22.py --run examples/file_explorer_v22.json
+
+# List examples or run without a terminal
+python3 rad-tui-py-v22.py --list-examples
+python3 rad-tui-py-v22.py --run --headless examples/chart_viewer.json
+
 # Terminal-compatible version
 python3 rad-tui-py-compat.py
 ```

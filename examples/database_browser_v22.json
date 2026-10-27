@@ -58,7 +58,7 @@
       "w": 72,
       "h": 1,
       "tool_type": 22,
-      "name_id": "statusBar",
+      "name_id": "lblStatus",
       "caption": "",
       "code": "",
       "panels": [

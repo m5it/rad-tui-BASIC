@@ -15,6 +15,43 @@ PYTHON_KEYWORDS = {
     "global", "nonlocal", "break", "continue", "print", "exec"
 }
 
+def normalize_code(code):
+    """Repair legacy double-escaped code fields from older project files."""
+    if not isinstance(code, str) or not code or '\n' in code:
+        return code
+    if '\\n' not in code and '\\t' not in code and '\\r' not in code:
+        return code
+    try:
+        compile(code, '<project>', 'exec')
+        return code
+    except SyntaxError:
+        pass
+    out = []
+    i = 0
+    while i < len(code):
+        ch = code[i]
+        if ch == '\\' and i + 1 < len(code):
+            nxt = code[i + 1]
+            if nxt == 'n':
+                out.append('\n')
+                i += 2
+                continue
+            if nxt == 'r':
+                out.append('\r')
+                i += 2
+                continue
+            if nxt == 't':
+                out.append('\t')
+                i += 2
+                continue
+            if nxt in ('\\', '"', "'"):
+                out.append(nxt)
+                i += 2
+                continue
+        out.append(ch)
+        i += 1
+    return ''.join(out)
+
 def tokenize_python(line):
     pattern = re.compile(r'(\s+|\w+|"[^"]*"|#[^\n]*|.)')
     tokens = []
@@ -78,7 +115,7 @@ class UIControl:
     def from_dict(cls, data):
         c = cls(data['x'], data['y'], data['w'], data['h'], 
                 data['tool_type'], data['name_id'], data['caption'])
-        c.code = data.get('code', '')
+        c.code = normalize_code(data.get('code', ''))
         c.checked = data.get('checked', False)
         c.group = data.get('group', '')
         c.parent = data.get('parent', 0)
